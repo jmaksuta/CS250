@@ -112,7 +112,7 @@ public class TCPServer {
     public void run() throws Exception {
         // todo: this may be unnecessary to run this in a thread, also it may be
         // unnecessary to expect more than 2 clients.
-        Common.writeLineToConsole("Waiting for clients...");
+        Common.writeLineToConsole("Waiting for client...");
         while (clientConnections.size() < 2) {
             connectAndRegisterClient();
         }
