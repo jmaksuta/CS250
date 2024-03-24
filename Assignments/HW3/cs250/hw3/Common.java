@@ -63,8 +63,8 @@ public class Common {
         boolean result = false;
         try {
             String ipv4 = "[0-9]{1,3}[\\.][0-9]{1,3}[\\.][0-9]{1,3}[\\.][0-9]{1,3}";
-            String ipv6 = "";
-            String domainName = "";
+            String ipv6 = "[ 0-9A-Fa-f]{0,4}:[ 0-9A-Fa-f]{0,4}:[ 0-9A-Fa-f]{0,4}:[ 0-9A-Fa-f]{0,4}:[ 0-9A-Fa-f]{0,4}:[ 0-9A-Fa-f]{0,4}:[ 0-9A-Fa-f]{0,4}:[ 0-9A-Fa-f]{0,4}";
+            String domainName = "[a-zA-Z0-9-.:\\/]*";
 
             boolean isIpv4 = matchesRegEx(value, ipv4);
 

@@ -101,18 +101,20 @@ public class TCPServer {
     }
 
     public void startup() throws Exception {
+        Common.writeLineToConsole(String.format("IP Address: %s\nPort Number: %d",
+                InetAddress.getLocalHost().getHostName() + "/" +
+                        InetAddress.getLocalHost().getHostAddress(),
+                this.portNumber));
+
         serverSocket = new ServerSocket(this.portNumber);
 
         random = new Random(this.seed);
-
-        Common.writeLineToConsole(String.format("IP Address: %s\nPort Number: %d",
-                InetAddress.getLocalHost().getHostAddress(), this.portNumber));
     }
 
     public void run() throws Exception {
         // todo: this may be unnecessary to run this in a thread, also it may be
         // unnecessary to expect more than 2 clients.
-        Common.writeLineToConsole("Waiting for clients...");
+        Common.writeLineToConsole("Waiting for client...");
         while (clientConnections.size() < 2) {
             connectAndRegisterClient();
         }
@@ -133,12 +135,14 @@ public class TCPServer {
     }
 
     private void sendConfigurationToClients() throws Exception {
+        Common.writeLineToConsole("Sending config to clients...");
         for (ClientConnection connection : this.clientConnections) {
             connection.sendMessage(connection.configuration);
 
-            Common.writeLineToConsole(String.format("%s %d", connection.clientSocket.getLocalAddress(),
+            Common.writeLineToConsole(String.format("%s %d", connection.clientSocket.getInetAddress().getHostName(),
                     connection.configuration.getSeed()));
         }
+        Common.writeLineToConsole("Finished sending config to clients.");
     }
 
     public void cleanup() {
