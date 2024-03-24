@@ -88,28 +88,138 @@ Submission 2 contains previous tasks and Task 3 completed.
 Submission 3 contains previous tasks and Tasks 4 and 5.
 -----------------------------------------------------------------------------------------------
 CLASSES
-There are 6 class files in total in this assignment.
-
+There are 6 class files in total in this assignment, and 7 classes.
+-------------------------------------------
+File Name:  TCPServer.java
 Class Name: TCPServer
-Description:
+Description: This class is used to run the TCP Server application that interacts with TCP Client applications
+    using TCP sockets.
 Methods:
+    public TCPServer()
+    The default constructor of the TCPServer class.
 
+    public TCPServer(int portNumber, int seed, int numberOfMessages)
+    Creates an instance of the TCPServer class with the values supplied as parameters.
+    Parameters:
+    portNumber          - The port number the TCPServer is running on.
+    seed                - The seed value of the TCPServer's random number generator.
+    numberOfMessages    - The number of messages to exchange with TCPClients.
+
+    public static void main(String[] args)
+    The main entry point of the application. It initializes, starts, runs, and cleans up the TCP Server.
+    Parameters:
+    args    - the command line arguments supplied to the application.
+    
+    public void startup() throws Exception
+    Initializes the TCP Server.
+
+    public void run() throws Exception
+    Waits for and establishes two connections to TCPClient applications on a given port. Once both clients
+    are connected it will exchange configuration information with the TCP clients providing each with
+    the number of messages it will exchange and a randomly generated number used for the TCP Clients'say
+    random number generator's seed value.
+
+    public void cleanup()
+    Cleans up resources used by TCPServer for garbage collection.
+-------------------------------------------
+File Name:  TCPServer.java
 Class Name: TCPServer.ClientConnection
-Description:
+Super Class: java.lang.Thread
+Description: This class maintains the instance of the TCPClient's connection to the TCPServer.
+Fields:
+    boolean isRunning
+    This is the state of the thread.
 Methods:
+    public ClientConnection(Socket clientSocket, Configuration configuration) throws Exception
+    The public constructor of the ClientConnection class.
+    Parameters:
+    clientSocket    - An instance of java.net.Socket used for the TCPClient's connection to the TCPServer.
+    configuration   - An instance of Configuration used for representing the TCPClient on the TCPServer.
+    
+    public void run()
+    Starts the ClientConnection and runs whilre isRunning is true.
+        
+    public void sendMessage(String message) throws Exception
+    Sends a message to the TCPClient.
+    Parameters:
+    message - The message, as string, to send to the TCPClient.
 
+    public void sendMessage(int message) throws Exception
+    Sends a message to the TCPClient.
+    Parameters:
+    message - The message, as int, to send to the TCPClient.
+
+    public void sendMessage(Configuration configuration) throws Exception
+    Sends a message to the TCPClient containing the Configuration values.
+    Parameters:
+    configuration - The Configuration whose values are sent to the TCPClient.
+
+    public String receiveMessage() throws Exception
+    Returns a string received from the TCPClient.
+
+    public void cleanup()
+    Cleans up resources used by TCPServer.ClientConnection for garbage collection.
+-------------------------------------------
+File Name:  TCPClient.java
 Class Name: TCPClient
-Description:
+Description: The TCP Client application that connects to a TCP Server, retrieves a client seed
+    and number of messages.
 Methods:
+    public TCPClient()
+    The default constructor of TCPClient class.
 
+    public TCPClient(String hostName, int hostPort)
+    A constructor of TCPClient class that sets the hostName and hostPort to the parameter values supplied.
+
+    public static void main(String[] args)
+    The main entry point of the application. It initializes, starts, runs, and cleans up the TCP Client.
+    Parameters:
+    args    - the command line arguments supplied to the application.
+
+    public void startup() throws Exception
+    Starts the TCPClient instance.
+
+    public void sendMessage(String message) throws Exception
+    Sends a message to the TCPServer.
+    Parameters:
+    message - the message to send to the TCPServer.
+
+    public String receiveMessage() throws Exception
+    Receives a message from the TCPServer.
+
+    public void cleanup()
+    Cleans up resources used by TCPClient for garbage collection.
+-------------------------------------------
+File Name:  Main.java
 Class Name: Main
-Description:
-Methods:
+Description: This class is used to handle many of the common operations in starting applications.
+Constants:
+    public static final int MIN_PORT_NUMBER = 1025
+    The minimum port number allowed for the TCPServer.
 
+    public static final int MAX_PORT_NUMBER = 65535
+    The maximum port number allowed for the TCPServer.
+
+    public static final int MIN_UNSIGNED_INTEGER = 0
+    The minimum value of unsigned integer.
+
+    public static final int MAX_UNSIGNED_INTEGER = 2147483647
+    The maximum value of unsigned integer.
+Methods:
+    public static void validateCommandLineArgs(String[] args, IMain mainInterface) throws Exception
+    Validates the command line args implementing the interface mainInterface.
+    Parameters:
+    args            - the command line args to validate.
+    mainInterface   - the IMain interface used.
+-------------------------------------------
+File Name:  IMain.java
 Interface Name: IMain
-Description:
+Description:    This interface is used by both TCPServer and TCPClient to add behaviors.
 Methods:
-
+    void validateCommandLineArgs() throws Exception
+    Allows the implementating class to validate validateCommandLineArgs.
+-------------------------------------------
+File Name:  Common.java
 Class Name: Common
 Description: This class contains many static methods used by all classes as a global resource.
 Methods:
@@ -162,13 +272,25 @@ Methods:
     Parameters:
     destination - The byte array to append to.
     source - The byte array to append onto destination.
-
+-------------------------------------------
+File Name:  Configuration.java
 Class Name: Configuration
-Description:
+Description: This class holds the values used for client configuration
 Methods:
 
-Class Name: 
-Description:
-Methods:
+    public int getNumberOfMessages()
+    Returns the int value of the number of messages used by TCPClient.
 
+    public int getSeed()
+    Returns the int value of seed used by TCPClient.
+
+    public Configuration()
+    The public default constructor of the Configuration class.
+
+    public Configuration(int numberOfMessages, int seed)
+    A public constructor for the Configuration class. Sets the instance fields numberOfMessages and seed.
+
+    public String toString()
+    Returns a string in the format <numberOfMessages> <seed>
+-------------------------------------------
 -----------------------------------------------------------------------------------------------
