@@ -96,11 +96,12 @@ public class Common {
 
     /**
      * Converts an int to a big endian encoded byte array.
+     * 
      * @param value
      * @return
      * @apiNote
-     * ByteBuffer usage from
-     * https://docs.oracle.com/javase/8/docs/api/java/nio/ByteBuffer.html
+     *          ByteBuffer usage from
+     *          https://docs.oracle.com/javase/8/docs/api/java/nio/ByteBuffer.html
      */
     public static byte[] intToByteArray(int value) {
         ByteBuffer buffer = ByteBuffer.allocate(4);
@@ -109,20 +110,37 @@ public class Common {
         return buffer.array();
     }
 
+    public static byte[] append(byte[] destination, byte source) {
+        return append(destination, new byte[] { source });
+    }
+
     /**
      * Appends a byte array to another byte array.
+     * 
      * @param destination
      * @param source
      * @return
      * @apiNote
-     * System.arraycopy usage from
-     * https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#arraycopy-java.lang.Object-int-java.lang.Object-int-int-
+     *          System.arraycopy usage from
+     *          https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#arraycopy-java.lang.Object-int-java.lang.Object-int-int-
      */
     public static byte[] append(byte[] destination, byte[] source) {
         byte[] result = new byte[destination.length + source.length];
         System.arraycopy(destination, 0, result, 0, destination.length);
         System.arraycopy(source, 0, result, destination.length, source.length);
         return result;
+    }
+
+    public static byte[] subbyte(byte[] bytes, int startIndex, int length) {
+        byte[] result = new byte[length];
+        System.arraycopy(bytes, startIndex, result, 0, length);
+        return result;
+    }
+
+    public static int toInteger(byte[] bytes) {
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        return buffer.getInt();
     }
 
 }

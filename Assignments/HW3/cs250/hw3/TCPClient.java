@@ -3,8 +3,10 @@ package cs250.hw3;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class TCPClient {
 
@@ -19,6 +21,8 @@ public class TCPClient {
     private int generatorSeed;
     @SuppressWarnings("unused")
     private long senderSum;
+    private int messagesSent;
+    private Random random;
 
     public TCPClient() {
         super();
@@ -27,9 +31,11 @@ public class TCPClient {
         this.numberOfMessages = 0;
         this.generatorSeed = 0;
         this.senderSum = 0;
+        this.messagesSent = 0;
         this.socket = null;
         this.dataOutputStream = null;
         this.dataInputStream = null;
+        this.random = new Random(this.generatorSeed);
     }
 
     public TCPClient(String hostName, int hostPort) {
@@ -74,6 +80,7 @@ public class TCPClient {
 
             client = new TCPClient(args[0], Common.toInteger(args[1]));
             client.startup();
+            client.run();
 
         } catch (Exception e) {
             Common.writeLineToConsole(e.getMessage());
@@ -89,17 +96,19 @@ public class TCPClient {
         this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
         this.dataInputStream = new DataInputStream(socket.getInputStream());
 
-        String registration = receiveMessage();
+        byte[] registration = receiveRegistration();
 
         parseRegistration(registration);
 
         writeRegistrationConfirmationToConsole();
     }
 
-    private void parseRegistration(String registration) {
-        String[] registrationParts = registration.split(" ");
-        this.numberOfMessages = Integer.parseInt(registrationParts[0]);
-        this.generatorSeed = Integer.parseInt(registrationParts[1]);
+    private void parseRegistration(byte[] registration) {
+        this.numberOfMessages = Common.toInteger(Common.subbyte(registration, 0, 4));
+        this.generatorSeed = Common.toInteger(Common.subbyte(registration, 4, 4));
+        this.random = new Random(this.generatorSeed);
+        // this.numberOfMessages = Integer.parseInt(registrationParts[0]);
+        // this.generatorSeed = Integer.parseInt(registrationParts[1]);
     }
 
     private void writeRegistrationConfirmationToConsole() {
@@ -116,14 +125,57 @@ public class TCPClient {
         this.dataOutputStream.writeBytes(message);
     }
 
-    public String receiveMessage() throws Exception {
-        ArrayList<Byte> bytesReceived = new ArrayList<>();
+    public void sendMessage(int toSend) throws Exception {
+        byte[] message = new byte[] {};
+
+        message = Common.append(message, Common.intToByteArray(toSend));
+
+        this.dataOutputStream.write(message);
+        this.dataOutputStream.flush();
+    }
+
+    public byte[] receiveRegistration() throws Exception {
+        byte[] bytesReceived = new byte[] {};
         do {
-            bytesReceived.add((byte)this.dataInputStream.read());
+            // bytesReceived.add((byte)this.dataInputStream.read());
+            bytesReceived = Common.append(bytesReceived, (byte) this.dataInputStream.read());
         } while (this.dataInputStream.available() > 0);
 
-        String message = new String(Common.listToArray(bytesReceived));
-        return message;
+        // String message = new String(Common.listToArray(bytesReceived));
+        // return message;
+
+        return bytesReceived;
+    }
+
+    public void run() throws Exception {
+        Common.writeLineToConsole("Starting to send messages to server...");
+        // clear the counters
+        clearCounters();
+        // send the messages to the server and maintain the sum
+        generateAndSendMessages();
+
+        writeSummary();
+    }
+
+    private void clearCounters() {
+        this.senderSum = 0;
+        this.messagesSent = 0;
+    }
+
+    private void generateAndSendMessages() throws Exception {
+        for (int n = 0; n < this.numberOfMessages; n++) {
+            // generate a number
+            int toSend = this.random.nextInt();
+            this.senderSum += toSend;
+            sendMessage(toSend);
+            this.messagesSent++;
+        }
+    }
+
+    private void writeSummary() {
+        Common.writeLineToConsole("Finished sending messages to server.");
+        Common.writeLineToConsole(String.format("Total messages sent: %d", this.messagesSent));
+        Common.writeLineToConsole(String.format("Sum of messages sent: %d", this.senderSum));
     }
 
     public void cleanup() {
