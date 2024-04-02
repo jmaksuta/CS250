@@ -121,24 +121,19 @@ public class TCPClient {
     }
 
     public void sendMessage(int toSend) throws Exception {
-        try {
-            byte[] message = new byte[] {};
+        byte[] message = new byte[] {};
 
-            message = Common.append(message, Common.intToByteArray(toSend));
+        message = Common.append(message, Common.intToByteArray(toSend));
 
-            this.dataOutputStream.write(message);
-            this.dataOutputStream.flush();
-        } catch (Exception e) {
-            Common.writeLineToConsole("DEBUGE: " + e.getMessage());
-            throw e;
-        }
+        this.dataOutputStream.write(message);
+        this.dataOutputStream.flush();
     }
 
     public byte[] receiveRegistration() throws Exception {
         byte[] bytesReceived = new byte[] {};
         do {
             bytesReceived = Common.append(bytesReceived, (byte) this.dataInputStream.read());
-        
+
         } while (this.dataInputStream.available() > 0);
 
         return bytesReceived;
