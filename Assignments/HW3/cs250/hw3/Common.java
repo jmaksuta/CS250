@@ -133,7 +133,9 @@ public class Common {
 
     public static byte[] subbyte(byte[] bytes, int startIndex, int length) {
         byte[] result = new byte[length];
-        System.arraycopy(bytes, startIndex, result, 0, length);
+        if (bytes.length >= length) {
+            System.arraycopy(bytes, startIndex, result, 0, length);
+        }
         return result;
     }
 

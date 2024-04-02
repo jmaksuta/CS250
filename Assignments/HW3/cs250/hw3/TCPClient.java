@@ -3,9 +3,7 @@ package cs250.hw3;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
 import java.util.Random;
 
 public class TCPClient {
@@ -19,9 +17,8 @@ public class TCPClient {
 
     private int numberOfMessages;
     private int generatorSeed;
-    @SuppressWarnings("unused")
     private long senderSum;
-    private int messagesSent;
+    private int numOfSentMessages;
     private Random random;
 
     public TCPClient() {
@@ -31,7 +28,7 @@ public class TCPClient {
         this.numberOfMessages = 0;
         this.generatorSeed = 0;
         this.senderSum = 0;
-        this.messagesSent = 0;
+        this.numOfSentMessages = 0;
         this.socket = null;
         this.dataOutputStream = null;
         this.dataInputStream = null;
@@ -107,8 +104,6 @@ public class TCPClient {
         this.numberOfMessages = Common.toInteger(Common.subbyte(registration, 0, 4));
         this.generatorSeed = Common.toInteger(Common.subbyte(registration, 4, 4));
         this.random = new Random(this.generatorSeed);
-        // this.numberOfMessages = Integer.parseInt(registrationParts[0]);
-        // this.generatorSeed = Integer.parseInt(registrationParts[1]);
     }
 
     private void writeRegistrationConfirmationToConsole() {
@@ -126,40 +121,45 @@ public class TCPClient {
     }
 
     public void sendMessage(int toSend) throws Exception {
-        byte[] message = new byte[] {};
+        try {
+            byte[] message = new byte[] {};
 
-        message = Common.append(message, Common.intToByteArray(toSend));
+            message = Common.append(message, Common.intToByteArray(toSend));
 
-        this.dataOutputStream.write(message);
-        this.dataOutputStream.flush();
+            this.dataOutputStream.write(message);
+            this.dataOutputStream.flush();
+        } catch (Exception e) {
+            Common.writeLineToConsole("DEBUGE: " + e.getMessage());
+            throw e;
+        }
     }
 
     public byte[] receiveRegistration() throws Exception {
         byte[] bytesReceived = new byte[] {};
         do {
-            // bytesReceived.add((byte)this.dataInputStream.read());
             bytesReceived = Common.append(bytesReceived, (byte) this.dataInputStream.read());
+        
         } while (this.dataInputStream.available() > 0);
-
-        // String message = new String(Common.listToArray(bytesReceived));
-        // return message;
 
         return bytesReceived;
     }
 
     public void run() throws Exception {
+        // sleep for 10 seconds.
+        Thread.sleep(10000);
+        // print status message to console.
         Common.writeLineToConsole("Starting to send messages to server...");
         // clear the counters
         clearCounters();
         // send the messages to the server and maintain the sum
         generateAndSendMessages();
-
+        // print the summary to the console.
         writeSummary();
     }
 
     private void clearCounters() {
         this.senderSum = 0;
-        this.messagesSent = 0;
+        this.numOfSentMessages = 0;
     }
 
     private void generateAndSendMessages() throws Exception {
@@ -168,13 +168,13 @@ public class TCPClient {
             int toSend = this.random.nextInt();
             this.senderSum += toSend;
             sendMessage(toSend);
-            this.messagesSent++;
+            this.numOfSentMessages++;
         }
     }
 
     private void writeSummary() {
         Common.writeLineToConsole("Finished sending messages to server.");
-        Common.writeLineToConsole(String.format("Total messages sent: %d", this.messagesSent));
+        Common.writeLineToConsole(String.format("Total messages sent: %d", this.numOfSentMessages));
         Common.writeLineToConsole(String.format("Sum of messages sent: %d", this.senderSum));
     }
 
