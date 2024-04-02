@@ -2,11 +2,12 @@
 Author:     John Maksuta
 Course:     CS250-801 Spring 2024
 Instructor: Professor Pallickara
-Date:       2024-03-27
+Date:       2024-04-03
 Assignment: Homework 3
 -----------------------------------------------------------------------------------------------
 Description:
-This is my submission for Homework 3.
+This is my submission number 2 for Homework 3.
+Tasks 1, 2, and 3 are completed.
 There are two applications in this project.
 
 TCPServer and TCPClient
@@ -184,8 +185,22 @@ Methods:
     Parameters:
     message - the message to send to the TCPServer.
 
-    public String receiveMessage() throws Exception
-    Receives a message from the TCPServer.
+    public void sendMessage(int toSend) throws Exception
+    Converts and int to a big endian encoded byte array and sends it to the server.
+    After sending it flushs the DataOutPutStream used.
+
+    public byte[] receiveRegistration() throws Exception
+    reads the bytes from the server that were sent during registration process.
+    It anticipates receiving two integers encoded as big endian with 4 bytes each for a total of
+    8 bytes. It will read the bytes until there are no more available in the DataInputStream.
+
+    public void run() throws Exception
+    This performs the main actions of the application after registration. First, it waits 10 seconds,
+    and then begins its process. It writes the "starting to send messages to the server message to the console.
+    It then clears the counter variables, senderSum, and numOfSentMessages. Then enters a loop where it generates
+    a random number, adds it to the sender sum, sends it to the server, and then increments the numOfSentMessages
+    counter. The loop continues until the number of messages defined by the server has been reached.
+    After this loop completes it writes the summary to the console.
 
     public void cleanup()
     Cleans up resources used by TCPClient for garbage collection.
@@ -266,12 +281,32 @@ Methods:
     Parameters:
     value   - the int value used to converte to a byte array.
 
+    public static byte[] append(byte[] destination, byte source)
+    returns a byte array consisting of the destination byte array concatenated with the source byte.
+    Parameters:
+    destination - The byte array to append to.
+    source - The byte to append onto destination.
+
     public static byte[] append(byte[] destination, byte[] source)
     returns a byte array consisting of the destination byte array concatenated with the source byte
     array.
     Parameters:
     destination - The byte array to append to.
     source - The byte array to append onto destination.
+
+    public static byte[] subbyte(byte[] bytes, int startIndex, int length)
+    This method is similar to the substring function for strings, but it works on a byte array instead.
+    It returns a byte array from the bytes byte array parameter from the startIndex for a specified length.
+    It will return an empty array if the source bytes has a length less than the length parameter.
+    Parameters:
+    bytes - The source byte array.
+    startIndex - the index to start from.
+    length - the length of bytes to return.
+
+    public static int toInteger(byte[] bytes)
+    This method converts an array of big endian encoded bytes to an integer.
+    Parameters:
+    bytes - the byte array to convert to an integer.
 -------------------------------------------
 File Name:  Configuration.java
 Class Name: Configuration
