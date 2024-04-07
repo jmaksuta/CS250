@@ -2,6 +2,7 @@ package cs250.hw3;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.security.InvalidParameterException;
 import java.util.Random;
@@ -18,7 +19,9 @@ public class TCPClient {
     private int numberOfMessages;
     private int generatorSeed;
     private long senderSum;
+    private long receiverSum;
     private int numOfSentMessages;
+    private int numOfReceivedMessages;
     private Random random;
 
     public TCPClient() {
@@ -28,7 +31,9 @@ public class TCPClient {
         this.numberOfMessages = 0;
         this.generatorSeed = 0;
         this.senderSum = 0;
+        this.receiverSum = 0;
         this.numOfSentMessages = 0;
+        this.numOfReceivedMessages = 0;
         this.socket = null;
         this.dataOutputStream = null;
         this.dataInputStream = null;
@@ -129,6 +134,11 @@ public class TCPClient {
         this.dataOutputStream.flush();
     }
 
+    public int receiveMessage() throws Exception {
+        int message = this.dataInputStream.readInt();
+        return message;
+    }
+
     public byte[] receiveRegistration() throws Exception {
         byte[] bytesReceived = new byte[] {};
         do {
@@ -139,13 +149,26 @@ public class TCPClient {
         return bytesReceived;
     }
 
+    public byte[] receive() throws Exception {
+        byte[] bytesReceived = new byte[] {};
+        do {
+            bytesReceived = Common.append(bytesReceived, (byte) this.dataInputStream.read());
+
+        } while (this.dataInputStream.available() > 0);
+
+        return bytesReceived;
+    }
+
     public void run() throws Exception {
+        // startReadThread();
         // sleep for 10 seconds.
         Thread.sleep(10000);
         // print status message to console.
         Common.writeLineToConsole("Starting to send messages to server...");
         // clear the counters
         clearCounters();
+        // TODO: start read thread
+        // startReadThread();
         // send the messages to the server and maintain the sum
         generateAndSendMessages();
         // print the summary to the console.
@@ -164,6 +187,9 @@ public class TCPClient {
             this.senderSum += toSend;
             sendMessage(toSend);
             this.numOfSentMessages++;
+            int receivedMessage = receiveMessage();
+            this.receiverSum += receivedMessage;
+            this.numOfReceivedMessages++;
         }
     }
 
@@ -171,6 +197,30 @@ public class TCPClient {
         Common.writeLineToConsole("Finished sending messages to server.");
         Common.writeLineToConsole(String.format("Total messages sent: %d", this.numOfSentMessages));
         Common.writeLineToConsole(String.format("Sum of messages sent: %d", this.senderSum));
+    }
+
+    private void startReadThread() {
+
+        Reader reader = new Reader(new ReaderListener() {
+
+            @Override
+            public void OnBytesReceived(byte[] bytesReceived) {
+                try {
+                    int messageReceived = Common.toInteger(bytesReceived);
+                    receiverSum += messageReceived;
+
+                    numOfReceivedMessages++;
+
+                } catch (Exception e) {
+                    // do nothing.
+                    System.out.println("DEBUG:" + e.getMessage());
+                }
+            }
+
+        });
+        reader.setPriority(Thread.NORM_PRIORITY);
+        reader.start();
+
     }
 
     public void cleanup() {
@@ -188,6 +238,50 @@ public class TCPClient {
         } catch (Exception e) {
             // do nothing.
         }
+    }
+
+    private interface ReaderListener {
+        void OnBytesReceived(byte[] bytesReceived);
+    }
+
+    private class Reader extends Thread {
+        boolean isRunning;
+
+        private ReaderListener listener;
+
+        private Reader() {
+            super();
+            this.isRunning = false;
+        }
+
+        public Reader(ReaderListener listener) {
+            this();
+            this.listener = listener;
+        }
+
+        @Override
+        public void run() {
+            // super.run();
+
+            isRunning = true;
+            while (isRunning) {
+                try {
+                    byte[] bytesReceived = receive();
+                    raiseOnBytesReceived(bytesReceived);
+                } catch (IOException e) {
+                    isRunning = false;
+                } catch (Exception e) {
+                    isRunning = false;
+                }
+            }
+        }
+
+        private void raiseOnBytesReceived(byte[] bytesReceived) {
+            if (this.listener != null) {
+                this.listener.OnBytesReceived(bytesReceived);
+            }
+        }
+
     }
 
 }

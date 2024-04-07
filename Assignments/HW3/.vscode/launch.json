@@ -17,8 +17,8 @@
             "mainClass": "cs250.hw3.TCPClient",
             "projectName": "HW3_a923567",
             "args": [
-                "129.82.44.87",
-                "1345"
+                "denver",
+                "5000"
             ]
         },
         {
