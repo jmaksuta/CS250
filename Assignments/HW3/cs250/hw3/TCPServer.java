@@ -22,7 +22,7 @@ public class TCPServer {
     private ArrayList<ClientConnection> clientConnections;
     private Random random;
 
-    private Object lock;
+    // private Object lock;
 
     public TCPServer() {
         super();
@@ -32,7 +32,6 @@ public class TCPServer {
         this.serverSocket = null;
         this.clientConnections = new ArrayList<>();
         this.random = new Random();
-        lock = new Object();
     }
 
     public TCPServer(int portNumber, int seed, int numberOfMessages) {
@@ -296,13 +295,10 @@ public class TCPServer {
 
         @Override
         public void run() {
-            // super.run();
 
             isRunning = true;
             while (isRunning) {
                 try {
-                    // byte[] bytesReceived = receive();
-                    // raiseOnBytesReceived(bytesReceived);
                     int message = receiveIntMessage();
                     receiverSum += message;
                     numOfReceivedMessages++;
@@ -315,29 +311,12 @@ public class TCPServer {
                     // ignore error.
                 }
             }
-            // lock.notifyAll();
-        }
-
-        private byte[] receive() throws Exception {
-            byte[] bytesReceived = new byte[] {};
-            do {
-                bytesReceived = Common.append(bytesReceived, (byte) this.dataInputStream.read());
-
-            } while (this.dataInputStream.available() > 0);
-
-            return bytesReceived;
         }
 
         private int receiveIntMessage() throws Exception {
             int message = this.dataInputStream.readInt();
 
             return message;
-        }
-
-        private void raiseOnBytesReceived(byte[] bytesReceived) {
-            if (this.clientConnectionListener != null) {
-                this.clientConnectionListener.onBytesReceived(this, bytesReceived);
-            }
         }
 
         private void raiseOnMessageReceived(int message) {

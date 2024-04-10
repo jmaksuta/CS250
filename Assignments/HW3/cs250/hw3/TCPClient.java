@@ -2,7 +2,6 @@ package cs250.hw3;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.Socket;
 import java.security.InvalidParameterException;
 import java.util.Random;
@@ -160,15 +159,12 @@ public class TCPClient {
     }
 
     public void run() throws Exception {
-        // startReadThread();
         // sleep for 10 seconds.
         Thread.sleep(10000);
         // print status message to console.
         Common.writeLineToConsole("Starting to send messages to server...");
         // clear the counters
         clearCounters();
-        // TODO: start read thread
-        // startReadThread();
         // send the messages to the server and maintain the sum
         generateAndSendMessages();
         // print the summary to the console.
@@ -191,9 +187,6 @@ public class TCPClient {
             this.senderSum += toSend;
             sendMessage(toSend);
             this.numOfSentMessages++;
-            // int receivedMessage = receiveMessage();
-            // this.receiverSum += receivedMessage;
-            // this.numOfReceivedMessages++;
         }
     }
 
@@ -222,30 +215,6 @@ public class TCPClient {
         Common.writeLineToConsole(String.format("Sum of messages received: %d", this.receiverSum));
     }
 
-    private void startReadThread() {
-
-        Reader reader = new Reader(new ReaderListener() {
-
-            @Override
-            public void OnBytesReceived(byte[] bytesReceived) {
-                try {
-                    int messageReceived = Common.toInteger(bytesReceived);
-                    receiverSum += messageReceived;
-
-                    numOfReceivedMessages++;
-
-                } catch (Exception e) {
-                    // do nothing.
-                    System.out.println("DEBUG:" + e.getMessage());
-                }
-            }
-
-        });
-        reader.setPriority(Thread.NORM_PRIORITY);
-        reader.start();
-
-    }
-
     public void cleanup() {
         try {
             if (this.socket != null) {
@@ -261,50 +230,6 @@ public class TCPClient {
         } catch (Exception e) {
             // do nothing.
         }
-    }
-
-    private interface ReaderListener {
-        void OnBytesReceived(byte[] bytesReceived);
-    }
-
-    private class Reader extends Thread {
-        boolean isRunning;
-
-        private ReaderListener listener;
-
-        private Reader() {
-            super();
-            this.isRunning = false;
-        }
-
-        public Reader(ReaderListener listener) {
-            this();
-            this.listener = listener;
-        }
-
-        @Override
-        public void run() {
-            // super.run();
-
-            isRunning = true;
-            while (isRunning) {
-                try {
-                    byte[] bytesReceived = receive();
-                    raiseOnBytesReceived(bytesReceived);
-                } catch (IOException e) {
-                    isRunning = false;
-                } catch (Exception e) {
-                    isRunning = false;
-                }
-            }
-        }
-
-        private void raiseOnBytesReceived(byte[] bytesReceived) {
-            if (this.listener != null) {
-                this.listener.OnBytesReceived(bytesReceived);
-            }
-        }
-
     }
 
 }
