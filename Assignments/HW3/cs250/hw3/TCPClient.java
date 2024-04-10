@@ -106,11 +106,11 @@ public class TCPClient {
         writeRegistrationConfirmationToConsole();
     }
 
-    private void parseRegistration(byte[] registration) {
-        this.numberOfMessages = Common.toInteger(Common.subbyte(registration, 0, 4));
-        this.generatorSeed = Common.toInteger(Common.subbyte(registration, 4, 4));
-        this.random = new Random(this.generatorSeed);
-    }
+    // private void parseRegistration(byte[] registration) {
+    //     this.numberOfMessages = Common.toInteger(Common.subbyte(registration, 0, 4));
+    //     this.generatorSeed = Common.toInteger(Common.subbyte(registration, 4, 4));
+    //     this.random = new Random(this.generatorSeed);
+    // }
 
     private void writeRegistrationConfirmationToConsole() {
         String settingMessage = "%s = %d\n";
