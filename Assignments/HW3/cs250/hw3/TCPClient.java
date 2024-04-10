@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class TCPClient {
@@ -97,9 +98,10 @@ public class TCPClient {
         this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
         this.dataInputStream = new DataInputStream(socket.getInputStream());
 
-        byte[] registration = receiveRegistration();
+        // byte[] registration = receiveRegistration();
+        receiveRegistration();
 
-        parseRegistration(registration);
+        // parseRegistration(registration);
 
         writeRegistrationConfirmationToConsole();
     }
@@ -120,16 +122,17 @@ public class TCPClient {
         Common.writeToConsole(builder.toString());
     }
 
-    public void sendMessage(String message) throws Exception {
-        this.dataOutputStream.writeBytes(message);
-    }
+    // public void sendMessage(String message) throws Exception {
+    //     this.dataOutputStream.writeBytes(message);
+    // }
 
     public void sendMessage(int toSend) throws Exception {
-        byte[] message = new byte[] {};
+        // byte[] message = new byte[] {};
 
-        message = Common.append(message, Common.intToByteArray(toSend));
+        // message = Common.append(message, Common.intToByteArray(toSend));
 
-        this.dataOutputStream.write(message);
+        // this.dataOutputStream.write(message);
+        this.dataOutputStream.writeInt(toSend);
         this.dataOutputStream.flush();
     }
 
@@ -138,14 +141,25 @@ public class TCPClient {
         return message;
     }
 
-    public byte[] receiveRegistration() throws Exception {
-        byte[] bytesReceived = new byte[] {};
-        do {
-            bytesReceived = Common.append(bytesReceived, (byte) this.dataInputStream.read());
+    // public byte[] receiveRegistration() throws Exception {
+    //     byte[] bytesReceived = new byte[] {};
+    //     do {
+    //         bytesReceived = Common.append(bytesReceived, (byte) this.dataInputStream.read());
 
-        } while (this.dataInputStream.available() > 0);
+    //     } while (this.dataInputStream.available() > 0);
+        
 
-        return bytesReceived;
+    //     return bytesReceived;
+    // }
+
+    public void receiveRegistration() throws Exception {
+        ArrayList<Integer> received = new ArrayList<>();
+        for (int n = 0; n < 2; n++) {
+            received.add(this.dataInputStream.readInt());
+        }
+        this.numberOfMessages = received.get(0);
+        this.generatorSeed = received.get(1);
+        this.random = new Random(this.generatorSeed);
     }
 
     public byte[] receive() throws Exception {

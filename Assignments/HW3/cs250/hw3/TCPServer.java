@@ -163,7 +163,7 @@ public class TCPServer {
             Common.writeLineToConsole(
                     String.format("%s\n      Messages received: %d\n      Sum received: %d",
                             clientConnection.clientSocket.getInetAddress().getHostName(),
-                            clientConnection.getNumOfReceivedMessages(), 
+                            clientConnection.getNumOfReceivedMessages(),
                             clientConnection.getReceiverSum()));
         }
     }
@@ -176,14 +176,14 @@ public class TCPServer {
         ClientConnection connection = new ClientConnection(clientSocket, configuration, new ClientConnectionListener() {
 
             @Override
-            public void onBytesReceived(ClientConnection clientConnection, byte[] bytesReceived) {
+            public void onBytesReceived(ClientConnection clientConnection, int receivedMessage) {
                 try {
                     int clientIndex = clientConnections.indexOf(clientConnection);
                     for (int n = 0; n < clientConnections.size(); n++) {
                         if (n != clientIndex) {
                             // send to this client
                             ClientConnection connection = clientConnections.get(n);
-                            connection.sendMessage(bytesReceived);
+                            connection.sendMessage(receivedMessage);
                         }
                     }
 
@@ -231,6 +231,7 @@ public class TCPServer {
         Common.writeLineToConsole("Starting to listen for client messages...");
         for (ClientConnection clientConnection : this.clientConnections) {
             clientConnection.start();
+            // clientConnection.receiveMessages();
         }
     }
 
@@ -243,14 +244,13 @@ public class TCPServer {
                 connection.cleanup();
             }
 
-
         } catch (Exception e) {
             // do nothing.
         }
     }
 
     private interface ClientConnectionListener {
-        void onBytesReceived(ClientConnection clientConnection, byte[] bytesReceived);
+        void onBytesReceived(ClientConnection clientConnection, int receivedMessage);
 
         void onMessageReceived(ClientConnection clientConnection, int message);
     }
@@ -300,8 +300,8 @@ public class TCPServer {
             while (isRunning) {
                 try {
                     int message = receiveIntMessage();
-                    receiverSum += message;
-                    numOfReceivedMessages++;
+                    this.receiverSum += message;
+                    this.numOfReceivedMessages++;
                     raiseOnMessageReceived(message);
 
                 } catch (IOException e) {
@@ -310,6 +310,19 @@ public class TCPServer {
                 } catch (Exception e) {
                     // ignore error.
                 }
+            }
+        }
+
+        private void receiveMessages() {
+            try {
+                for (int n = 0; n < numberOfMessages; n++) {
+                    int message = receiveIntMessage();
+                    this.receiverSum += message;
+                    this.numOfReceivedMessages++;
+                    raiseOnMessageReceived(message);
+                }
+            } catch (Exception e) {
+                // do nothing.
             }
         }
 
@@ -325,11 +338,11 @@ public class TCPServer {
             }
         }
 
-        @SuppressWarnings("unused")
-        public void sendMessage(String message) throws Exception {
-            this.dataOutputStream.writeBytes(message);
-            this.dataOutputStream.flush();
-        }
+        // @SuppressWarnings("unused")
+        // public void sendMessage(String message) throws Exception {
+        // this.dataOutputStream.writeBytes(message);
+        // this.dataOutputStream.flush();
+        // }
 
         public void sendMessage(int message) throws Exception {
             this.dataOutputStream.writeInt(message);
@@ -350,6 +363,11 @@ public class TCPServer {
             this.dataOutputStream.write(message);
             this.dataOutputStream.flush();
         }
+
+        // public void sendMessage(int message) throws Exception {
+        // this.dataOutputStream.writeInt(message);
+        // this.dataOutputStream.flush();
+        // }
 
         @SuppressWarnings("unused")
         public String receiveMessage() throws Exception {
