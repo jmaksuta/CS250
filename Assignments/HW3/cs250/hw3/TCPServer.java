@@ -209,6 +209,7 @@ public class TCPServer {
         Common.writeLineToConsole("Starting to listen for client messages...");
         for (ClientConnection clientConnection : this.clientConnections) {
             clientConnection.start();
+            // clientConnection.receiveMessages();
         }
     }
 
@@ -286,6 +287,21 @@ public class TCPServer {
                     // ignore error.
                 }
             }
+        }
+
+        public void receiveMessages() {
+            isRunning = true;
+            try {
+                for (int n = 0; n < numberOfMessages; n++) {
+                    int message = receiveIntMessage();
+                    receiverSum += message;
+                    numOfReceivedMessages++;
+                    raiseOnMessageReceived(message);
+                }   
+            } catch (Exception e) {
+                // do nothing.
+            }
+            isRunning = false;
         }
 
         private int receiveIntMessage() throws Exception {

@@ -17,7 +17,7 @@
             "mainClass": "cs250.hw3.TCPClient",
             "projectName": "HW3_a923567",
             "args": [
-                "denver",
+                "hanoi",
                 "5000"
             ]
         },
