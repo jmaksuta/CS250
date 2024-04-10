@@ -172,7 +172,11 @@ public class TCPClient {
         // send the messages to the server and maintain the sum
         generateAndSendMessages();
         // print the summary to the console.
-        writeSummary();
+        writeSendSummary();
+        // listen for messages
+        listenAndReceiveMessages();
+        // print the summary to the console
+        writeReceiveSummary();
     }
 
     private void clearCounters() {
@@ -187,16 +191,35 @@ public class TCPClient {
             this.senderSum += toSend;
             sendMessage(toSend);
             this.numOfSentMessages++;
-            int receivedMessage = receiveMessage();
-            this.receiverSum += receivedMessage;
+            // int receivedMessage = receiveMessage();
+            // this.receiverSum += receivedMessage;
+            // this.numOfReceivedMessages++;
+        }
+    }
+
+    private void writeSendSummary() {
+        Common.writeLineToConsole("Finished sending messages to server.");
+        Common.writeLineToConsole(String.format("Total messages sent: %d", this.numOfSentMessages));
+        Common.writeLineToConsole(String.format("Sum of messages sent: %d", this.senderSum));
+    }
+
+    private void listenAndReceiveMessages() throws Exception {
+        Common.writeLineToConsole("Starting to listen for messages from server...");
+        receiveMessages();
+        Common.writeLineToConsole("Finished listening for messages from server.");
+    }
+
+    private void receiveMessages() throws Exception {
+        for (int n = 0; n < this.numberOfMessages; n++) {
+            int receivedNumber = this.dataInputStream.readInt();
+            this.receiverSum += receivedNumber;
             this.numOfReceivedMessages++;
         }
     }
 
-    private void writeSummary() {
-        Common.writeLineToConsole("Finished sending messages to server.");
-        Common.writeLineToConsole(String.format("Total messages sent: %d", this.numOfSentMessages));
-        Common.writeLineToConsole(String.format("Sum of messages sent: %d", this.senderSum));
+    private void writeReceiveSummary() {
+        Common.writeLineToConsole(String.format("Total messages received: %d", this.numOfReceivedMessages));
+        Common.writeLineToConsole(String.format("Sum of messages received: %d", this.receiverSum));
     }
 
     private void startReadThread() {

@@ -106,7 +106,7 @@ public class TCPServer {
     }
 
     public void startup() throws Exception {
-        Common.writeLineToConsole(String.format("IP Address: %s\nPort Number: %d",
+        Common.writeLineToConsole(String.format("IP Address: %s\nPort Number %d",
                 InetAddress.getLocalHost().getHostName() + "/" +
                         InetAddress.getLocalHost().getHostAddress(),
                 this.portNumber));
@@ -119,7 +119,7 @@ public class TCPServer {
     public void run() throws Exception {
         // todo: this may be unnecessary to run this in a thread, also it may be
         // unnecessary to expect more than 2 clients.
-        Common.writeLineToConsole("Waiting for client...");
+        Common.writeLineToConsole("waiting for client...");
         while (clientConnections.size() < 2) {
             connectAndRegisterClient();
         }
@@ -162,7 +162,7 @@ public class TCPServer {
     private void printSummary() {
         for (ClientConnection clientConnection : clientConnections) {
             Common.writeLineToConsole(
-                    String.format("%s\n\t\tMessages received: %d\n\t\tSum received: %d",
+                    String.format("%s\n      Messages received: %d\n      Sum received: %d",
                             clientConnection.clientSocket.getInetAddress().getHostName(),
                             clientConnection.getNumOfReceivedMessages(), 
                             clientConnection.getReceiverSum()));
@@ -243,6 +243,7 @@ public class TCPServer {
             for (ClientConnection connection : this.clientConnections) {
                 connection.cleanup();
             }
+
 
         } catch (Exception e) {
             // do nothing.
@@ -381,6 +382,7 @@ public class TCPServer {
 
         public void cleanup() {
             try {
+                this.isRunning = false;
                 if (this.clientSocket != null) {
                     this.clientSocket.close();
                 }
