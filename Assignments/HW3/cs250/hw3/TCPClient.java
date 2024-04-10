@@ -98,19 +98,10 @@ public class TCPClient {
         this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
         this.dataInputStream = new DataInputStream(socket.getInputStream());
 
-        // byte[] registration = receiveRegistration();
         receiveRegistration();
-
-        // parseRegistration(registration);
 
         writeRegistrationConfirmationToConsole();
     }
-
-    // private void parseRegistration(byte[] registration) {
-    //     this.numberOfMessages = Common.toInteger(Common.subbyte(registration, 0, 4));
-    //     this.generatorSeed = Common.toInteger(Common.subbyte(registration, 4, 4));
-    //     this.random = new Random(this.generatorSeed);
-    // }
 
     private void writeRegistrationConfirmationToConsole() {
         String settingMessage = "%s = %d\n";
@@ -122,16 +113,7 @@ public class TCPClient {
         Common.writeToConsole(builder.toString());
     }
 
-    // public void sendMessage(String message) throws Exception {
-    //     this.dataOutputStream.writeBytes(message);
-    // }
-
     public void sendMessage(int toSend) throws Exception {
-        // byte[] message = new byte[] {};
-
-        // message = Common.append(message, Common.intToByteArray(toSend));
-
-        // this.dataOutputStream.write(message);
         this.dataOutputStream.writeInt(toSend);
         this.dataOutputStream.flush();
     }
@@ -140,17 +122,6 @@ public class TCPClient {
         int message = this.dataInputStream.readInt();
         return message;
     }
-
-    // public byte[] receiveRegistration() throws Exception {
-    //     byte[] bytesReceived = new byte[] {};
-    //     do {
-    //         bytesReceived = Common.append(bytesReceived, (byte) this.dataInputStream.read());
-
-    //     } while (this.dataInputStream.available() > 0);
-        
-
-    //     return bytesReceived;
-    // }
 
     public void receiveRegistration() throws Exception {
         ArrayList<Integer> received = new ArrayList<>();

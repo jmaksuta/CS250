@@ -7,7 +7,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.nio.charset.Charset;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -21,8 +20,6 @@ public class TCPServer {
     private ServerSocket serverSocket;
     private ArrayList<ClientConnection> clientConnections;
     private Random random;
-
-    // private Object lock;
 
     public TCPServer() {
         super();
@@ -176,23 +173,6 @@ public class TCPServer {
         ClientConnection connection = new ClientConnection(clientSocket, configuration, new ClientConnectionListener() {
 
             @Override
-            public void onBytesReceived(ClientConnection clientConnection, byte[] bytesReceived) {
-                try {
-                    int clientIndex = clientConnections.indexOf(clientConnection);
-                    for (int n = 0; n < clientConnections.size(); n++) {
-                        if (n != clientIndex) {
-                            // send to this client
-                            ClientConnection connection = clientConnections.get(n);
-                            connection.sendMessage(bytesReceived);
-                        }
-                    }
-
-                } catch (Exception e) {
-                    System.out.println("DEBUG: " + e.getMessage());
-                }
-            }
-
-            @Override
             public void onMessageReceived(ClientConnection clientConnection, int message) {
                 try {
                     int clientIndex = clientConnections.indexOf(clientConnection);
@@ -212,8 +192,6 @@ public class TCPServer {
 
         });
         this.clientConnections.add(connection);
-
-        // connection.run();
     }
 
     private void sendConfigurationToClients() throws Exception {
@@ -249,8 +227,6 @@ public class TCPServer {
     }
 
     private interface ClientConnectionListener {
-        void onBytesReceived(ClientConnection clientConnection, byte[] bytesReceived);
-
         void onMessageReceived(ClientConnection clientConnection, int message);
     }
 
@@ -324,12 +300,6 @@ public class TCPServer {
             }
         }
 
-        // @SuppressWarnings("unused")
-        // public void sendMessage(String message) throws Exception {
-        //     this.dataOutputStream.writeBytes(message);
-        //     this.dataOutputStream.flush();
-        // }
-
         public void sendMessage(int message) throws Exception {
             this.dataOutputStream.writeInt(message);
             this.dataOutputStream.flush();
@@ -343,19 +313,6 @@ public class TCPServer {
 
             this.dataOutputStream.write(message);
             this.dataOutputStream.flush();
-        }
-
-        public void sendMessage(byte[] message) throws Exception {
-            this.dataOutputStream.write(message);
-            this.dataOutputStream.flush();
-        }
-
-        @SuppressWarnings("unused")
-        public String receiveMessage() throws Exception {
-            String message = "";
-            byte[] bytesReceived = this.dataInputStream.readAllBytes();
-            message = new String(bytesReceived, Charset.forName("utf-8"));
-            return message;
         }
 
         public void cleanup() {
