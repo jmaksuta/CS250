@@ -16,8 +16,11 @@ public class DecimalToBinary {
             DecimalToBinary decimalToBinary = new DecimalToBinary();
             // String outputStr = decimalToBinary.convertDecimalToBinaryString(toConvert);
             double output = decimalToBinary.convertDecimalToBinary(toConvert);
+            String inputStr = Common.getSignificantNumber(toConvert);
+            String outputStr = Common.getSignificantNumber(output);
 
-            String msg = String.format("%f -> %f", toConvert, output);
+            // String msg = String.format("%f -> %f", toConvert, output);
+            String msg = String.format("%s -> %s", inputStr, outputStr);
             System.out.println(msg);
 
         } catch (Exception e) {

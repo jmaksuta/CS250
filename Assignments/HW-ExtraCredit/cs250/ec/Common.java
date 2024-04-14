@@ -165,6 +165,10 @@ public class Common {
         return result;
     }
 
+    public static String doubleToDecimalString(double value) {
+        return doubleToDecimalString(value, false, false);
+    }
+
     private static String doubleToDecimalString(double value, boolean pad, boolean prefix) {
         String result = "";
         ArrayList<Integer> remainders = new ArrayList<>();
@@ -339,6 +343,62 @@ public class Common {
             }
         }
         return builder.toString();
+    }
+    public static String getSignificantNumber(double input) {
+        return getSignificantNumber(String.format("%f", input));
+    }
+    
+    public static String getSignificantNumber(String input) {
+        StringBuilder builder = new StringBuilder();
+        if (!input.isEmpty()) {
+            for (int n = 0; n < input.length(); n++) {
+                char current = input.charAt(n);
+                if (isValid(current, n)) {
+                    builder.append(current);
+                }
+            }
+        }
+        return stripTrailingZeros(builder.toString());
+    }
+
+    private static boolean isValid(char inChar, int inIndex) {
+        return (isLeadingSign(inChar, inIndex) || isDecimalPoint(inChar) || isNumber(inChar));
+    }
+
+    private static boolean isNumber(char inChar) {
+        return (inChar >= 48 && inChar <= 57);
+    }
+
+    public static boolean isSign(char inChar) {
+        return (inChar == 43 || inChar == 45);
+    }
+
+    private static boolean isLeadingSign(char inChar, int currentIndex) {
+        return (isSign(inChar) && currentIndex == 0);
+    }
+
+    private static boolean isDecimalPoint(char inChar) {
+        return (inChar == 46);
+    }
+
+    private static String stripTrailingZeros(String input) {
+        StringBuilder builder = new StringBuilder();
+        if (!input.isEmpty()) {
+            boolean isSignificant = false;
+            for (int n = input.length() - 1; n >= 0; n--) {
+                if (!isSignificant && isNonZeroNumber(input.charAt(n))) {
+                    isSignificant = true;
+                }
+                if (isSignificant) {
+                    builder.insert(0, input.charAt(n));
+                }
+            }
+        }
+        return builder.toString();
+    }
+
+    private static boolean isNonZeroNumber(char inChar) {
+        return (inChar >= 49 && inChar <= 57);
     }
 
 }
