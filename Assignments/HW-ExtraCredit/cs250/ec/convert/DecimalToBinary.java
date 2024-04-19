@@ -14,12 +14,11 @@ public class DecimalToBinary {
             }
             double toConvert = Common.decimalStringToDouble(args[0]);
             DecimalToBinary decimalToBinary = new DecimalToBinary();
-            // String outputStr = decimalToBinary.convertDecimalToBinaryString(toConvert);
+
             double output = decimalToBinary.convertDecimalToBinary(toConvert);
             String inputStr = Common.getSignificantNumber(toConvert);
             String outputStr = Common.getSignificantNumber(output);
 
-            // String msg = String.format("%f -> %f", toConvert, output);
             String msg = String.format("%s -> %s", inputStr, outputStr);
             System.out.println(msg);
 
@@ -32,28 +31,28 @@ public class DecimalToBinary {
         super();
     }
 
-    private String convertDecimalToBinaryString(double doubleToConvert) {
-        String base2ValueStr = "";
-        double base = 2.0;
-        int startIndex = (int) Math.pow(doubleToConvert, 1.0 / base);
-        int index = startIndex;
+    // private String convertDecimalToBinaryString(double doubleToConvert) {
+    //     String base2ValueStr = "";
+    //     double base = 2.0;
+    //     int startIndex = (int) Math.pow(doubleToConvert, 1.0 / base);
+    //     int index = startIndex;
         
-        while (!isEqualTo(doubleToConvert, 0.0)) {
-            double power = Math.pow(2.0, index);
-            if (doubleToConvert >= power) {
-                doubleToConvert -= power;
-                base2ValueStr += "1";
-            } else {
-                base2ValueStr += "0";
-            }
-            if (index == 0) {
-                base2ValueStr += ".";
-            }
-            index--;
-        }
+    //     while (!isEqualTo(doubleToConvert, 0.0)) {
+    //         double power = Math.pow(2.0, index);
+    //         if (doubleToConvert >= power) {
+    //             doubleToConvert -= power;
+    //             base2ValueStr += "1";
+    //         } else {
+    //             base2ValueStr += "0";
+    //         }
+    //         if (index == 0) {
+    //             base2ValueStr += ".";
+    //         }
+    //         index--;
+    //     }
 
-        return base2ValueStr;
-    }
+    //     return base2ValueStr;
+    // }
 
     private double convertDecimalToBinary(double doubleToConvert) {
         double base2Value = 0.0;
