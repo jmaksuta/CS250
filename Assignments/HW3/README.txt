@@ -329,3 +329,53 @@ Methods:
     Returns a string in the format <numberOfMessages> <seed>
 -------------------------------------------
 -----------------------------------------------------------------------------------------------
+SAMPLE OUTPUT: TCPServer
+-------------------------------------------
+denver:~$ java cs250.hw3.TCPServer 5000 0 5
+IP Address: denver/129.82.44.141
+Port Number 5000
+waiting for client...
+Clients Connected!
+Sending config to clients...
+seoul.cs.colostate.edu -1155484576
+hanoi.cs.colostate.edu -723955400
+Finished sending config to clients.
+Starting to listen for client messages...
+Finished listening for client messages.
+seoul.cs.colostate.edu
+      Messages received: 5
+      Sum received: 1330278762
+hanoi.cs.colostate.edu
+      Messages received: 5
+      Sum received: 591243976
+-------------------------------------------
+SAMPLE OUTPUT: TCPClient 1
+-------------------------------------------
+seoul:~$ java cs250.hw3.TCPClient 129.82.44.141 5000
+Received Config
+number of messages = 5
+seed = -1155484576
+Starting to send messages to server...
+Finished sending messages to server.
+Total messages sent: 5
+Sum of messages sent: 1330278762
+Starting to listen for messages from server...
+Finished listening for messages from server.
+Total messages received: 5
+Sum of messages received: 591243976
+-------------------------------------------
+SAMPLE OUTPUT: TCPClient 2
+-------------------------------------------
+hanoi:~$ java cs250.hw3.TCPClient 129.82.44.141 5000
+Received Config
+number of messages = 5
+seed = -723955400
+Starting to send messages to server...
+Finished sending messages to server.
+Total messages sent: 5
+Sum of messages sent: 591243976
+Starting to listen for messages from server...
+Finished listening for messages from server.
+Total messages received: 5
+Sum of messages received: 1330278762
+-------------------------------------------

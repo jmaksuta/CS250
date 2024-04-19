@@ -2,10 +2,11 @@ package cs250.hw3;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.Charset;
+import java.net.SocketException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -101,7 +102,7 @@ public class TCPServer {
     }
 
     public void startup() throws Exception {
-        Common.writeLineToConsole(String.format("IP Address: %s\nPort Number: %d",
+        Common.writeLineToConsole(String.format("IP Address: %s\nPort Number %d",
                 InetAddress.getLocalHost().getHostName() + "/" +
                         InetAddress.getLocalHost().getHostAddress(),
                 this.portNumber));
@@ -114,13 +115,54 @@ public class TCPServer {
     public void run() throws Exception {
         // todo: this may be unnecessary to run this in a thread, also it may be
         // unnecessary to expect more than 2 clients.
-        Common.writeLineToConsole("Waiting for client...");
+        Common.writeLineToConsole("waiting for client...");
         while (clientConnections.size() < 2) {
             connectAndRegisterClient();
         }
         Common.writeLineToConsole("Clients Connected!");
 
         sendConfigurationToClients();
+        Thread.sleep(10000);
+        runClients();
+
+        checkIfEnded();
+        Common.writeLineToConsole("Finished listening for client messages.");
+
+        printSummary();
+    }
+
+    private void checkIfEnded() {
+        boolean isRunning = true;
+        while (isRunning) {
+            try {
+                isRunning = areClientConnectionsRunning();
+
+                Thread.sleep(2000);
+            } catch (Exception e) {
+                // do nothing.
+            }
+        }
+    }
+
+    private boolean areClientConnectionsRunning() {
+        boolean isRunning = false;
+        for (ClientConnection clientConnection : this.clientConnections) {
+            if (clientConnection.isRunning) {
+                isRunning = true;
+                break;
+            }
+        }
+        return isRunning;
+    }
+
+    private void printSummary() {
+        for (ClientConnection clientConnection : clientConnections) {
+            Common.writeLineToConsole(
+                    String.format("%s\n      Messages received: %d\n      Sum received: %d",
+                            clientConnection.clientSocket.getInetAddress().getHostName(),
+                            clientConnection.getNumOfReceivedMessages(),
+                            clientConnection.getReceiverSum()));
+        }
     }
 
     private void connectAndRegisterClient() throws Exception {
@@ -128,10 +170,28 @@ public class TCPServer {
 
         Configuration configuration = new Configuration(this.numberOfMessages, this.random.nextInt());
 
-        ClientConnection connection = new ClientConnection(clientSocket, configuration);
-        this.clientConnections.add(connection);
+        ClientConnection connection = new ClientConnection(clientSocket, configuration, new ClientConnectionListener() {
 
-        // connection.run();
+            @Override
+            public void onMessageReceived(ClientConnection clientConnection, int message) {
+                try {
+                    int clientIndex = clientConnections.indexOf(clientConnection);
+                    for (int n = 0; n < clientConnections.size(); n++) {
+                        if (n != clientIndex) {
+                            // send to this client
+                            ClientConnection connection = clientConnections.get(n);
+                            connection.sendMessage(message);
+                        }
+                    }
+                } catch (SocketException e) {
+                    clientConnection.isRunning = false;
+                } catch (Exception e) {
+                    System.out.println("DEBUG: " + e.getMessage());
+                }
+            }
+
+        });
+        this.clientConnections.add(connection);
     }
 
     private void sendConfigurationToClients() throws Exception {
@@ -143,6 +203,14 @@ public class TCPServer {
                     connection.configuration.getSeed()));
         }
         Common.writeLineToConsole("Finished sending config to clients.");
+    }
+
+    private void runClients() {
+        Common.writeLineToConsole("Starting to listen for client messages...");
+        for (ClientConnection clientConnection : this.clientConnections) {
+            clientConnection.start();
+            // clientConnection.receiveMessages();
+        }
     }
 
     public void cleanup() {
@@ -159,6 +227,10 @@ public class TCPServer {
         }
     }
 
+    private interface ClientConnectionListener {
+        void onMessageReceived(ClientConnection clientConnection, int message);
+    }
+
     private class ClientConnection extends Thread {
         boolean isRunning = false;
 
@@ -166,13 +238,27 @@ public class TCPServer {
         private Socket clientSocket;
         private DataOutputStream dataOutputStream;
         private DataInputStream dataInputStream;
+        private ClientConnectionListener clientConnectionListener;
+        private long receiverSum;
+        private int numOfReceivedMessages;
+
+        public long getReceiverSum() {
+            return receiverSum;
+        }
+
+        public int getNumOfReceivedMessages() {
+            return numOfReceivedMessages;
+        }
 
         private ClientConnection() {
             super();
             this.configuration = new Configuration();
+            this.receiverSum = 0L;
+            this.numOfReceivedMessages = 0;
         }
 
-        public ClientConnection(Socket clientSocket, Configuration configuration) throws Exception {
+        public ClientConnection(Socket clientSocket, Configuration configuration,
+                ClientConnectionListener clientConnectionListener) throws Exception {
             this();
             this.clientSocket = clientSocket;
             if (this.clientSocket != null) {
@@ -180,24 +266,56 @@ public class TCPServer {
                 this.dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
             }
             this.configuration = configuration;
+            this.clientConnectionListener = clientConnectionListener;
         }
 
         @Override
         public void run() {
-            super.run();
+
             isRunning = true;
             while (isRunning) {
+                try {
+                    int message = receiveIntMessage();
+                    receiverSum += message;
+                    numOfReceivedMessages++;
+                    raiseOnMessageReceived(message);
 
+                } catch (IOException e) {
+                    // the connection is closed or interrupted.
+                    isRunning = false;
+                } catch (Exception e) {
+                    // ignore error.
+                }
             }
         }
 
-        @SuppressWarnings("unused")
-        public void sendMessage(String message) throws Exception {
-            this.dataOutputStream.writeBytes(message);
-            this.dataOutputStream.flush();
+        public void receiveMessages() {
+            isRunning = true;
+            try {
+                for (int n = 0; n < numberOfMessages; n++) {
+                    int message = receiveIntMessage();
+                    receiverSum += message;
+                    numOfReceivedMessages++;
+                    raiseOnMessageReceived(message);
+                }   
+            } catch (Exception e) {
+                // do nothing.
+            }
+            isRunning = false;
         }
 
-        @SuppressWarnings("unused")
+        private int receiveIntMessage() throws Exception {
+            int message = this.dataInputStream.readInt();
+
+            return message;
+        }
+
+        private void raiseOnMessageReceived(int message) {
+            if (this.clientConnectionListener != null) {
+                this.clientConnectionListener.onMessageReceived(this, message);
+            }
+        }
+
         public void sendMessage(int message) throws Exception {
             this.dataOutputStream.writeInt(message);
             this.dataOutputStream.flush();
@@ -213,16 +331,9 @@ public class TCPServer {
             this.dataOutputStream.flush();
         }
 
-        @SuppressWarnings("unused")
-        public String receiveMessage() throws Exception {
-            String message = "";
-            byte[] bytesReceived = this.dataInputStream.readAllBytes();
-            message = new String(bytesReceived, Charset.forName("utf-8"));
-            return message;
-        }
-
         public void cleanup() {
             try {
+                this.isRunning = false;
                 if (this.clientSocket != null) {
                     this.clientSocket.close();
                 }
