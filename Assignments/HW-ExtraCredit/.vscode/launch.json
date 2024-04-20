@@ -24,14 +24,19 @@
             "name": "AlphaHistogram",
             "request": "launch",
             "mainClass": "cs250.ec.counting.AlphaHistogram",
-            "args": []
+            "args": [
+                "\"I am taking Computer Foundations\""
+            ]
         },
         {
             "type": "java",
             "name": "Equation",
             "request": "launch",
             "mainClass": "cs250.ec.order.Equation",
-            "args": []
+            "args": [
+                70,
+                5
+            ]
         }
     ]
 }
