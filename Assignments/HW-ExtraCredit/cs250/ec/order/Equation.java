@@ -18,7 +18,7 @@ public class Equation {
                 throw new Exception("The parameter is invalid. Expected length is 2.");
             }
             Equation equation = new Equation(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
-            System.out.printf("%.5f\n", equation.perform());
+            System.out.printf("f(x,y) = %.5f\n", equation.perform());
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
