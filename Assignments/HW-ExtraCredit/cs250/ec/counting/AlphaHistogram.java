@@ -1,25 +1,26 @@
 package cs250.ec.counting;
 
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 
+/**
+ * @author John Maksuta
+ * @since 2024-04-19
+ * @see Course: CS250-801 Spring 2024,
+ *      Instructor: Professor Pallickara,
+ *      Assignment: Extra Credit Assignment
+ */
 public class AlphaHistogram {
 
-    KeyValueList list;
+    private KeyValueList list;
 
     public static void main(String[] args) {
         try {
             if (args.length != 1) {
-                throw new InvalidParameterException("The parameter is invalid. Expected length is 1.");
+                throw new Exception("The parameter is invalid. Expected length is 1.");
             }
             AlphaHistogram alphaHistogram = new AlphaHistogram();
             alphaHistogram.createList(args[0]);

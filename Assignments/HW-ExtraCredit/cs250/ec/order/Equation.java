@@ -1,7 +1,12 @@
 package cs250.ec.order;
 
-import java.security.InvalidParameterException;
-
+/**
+ * @author John Maksuta
+ * @since 2024-04-19
+ * @see Course: CS250-801 Spring 2024,
+ *      Instructor: Professor Pallickara,
+ *      Assignment: Extra Credit Assignment
+ */
 public class Equation {
 
     private int x;
@@ -10,7 +15,7 @@ public class Equation {
     public static void main(String[] args) {
         try {
             if (args.length != 2) {
-                throw new InvalidParameterException("Expects 2 parameters");
+                throw new Exception("The parameter is invalid. Expected length is 2.");
             }
             Equation equation = new Equation(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
             System.out.printf("%.5f\n", equation.perform());

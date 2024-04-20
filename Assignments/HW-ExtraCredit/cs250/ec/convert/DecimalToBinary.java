@@ -1,16 +1,18 @@
 package cs250.ec.convert;
 
-import java.security.InvalidParameterException;
-
-import cs250.ec.Common;
-import cs250.ec.Common.ArgType;
-
+/**
+ * @author John Maksuta
+ * @since 2024-04-19
+ * @see Course: CS250-801 Spring 2024,
+ *      Instructor: Professor Pallickara,
+ *      Assignment: Extra Credit Assignment
+ */
 public class DecimalToBinary {
 
     public static void main(String[] args) {
         try {
             if (args.length != 1) {
-                throw new InvalidParameterException("The parameter is invalid. Expected length is 1.");
+                throw new Exception("The parameter is invalid. Expected length is 1.");
             }
             double toConvert = Common.decimalStringToDouble(args[0]);
             DecimalToBinary decimalToBinary = new DecimalToBinary();
@@ -31,40 +33,17 @@ public class DecimalToBinary {
         super();
     }
 
-    // private String convertDecimalToBinaryString(double doubleToConvert) {
-    //     String base2ValueStr = "";
-    //     double base = 2.0;
-    //     int startIndex = (int) Math.pow(doubleToConvert, 1.0 / base);
-    //     int index = startIndex;
-        
-    //     while (!isEqualTo(doubleToConvert, 0.0)) {
-    //         double power = Math.pow(2.0, index);
-    //         if (doubleToConvert >= power) {
-    //             doubleToConvert -= power;
-    //             base2ValueStr += "1";
-    //         } else {
-    //             base2ValueStr += "0";
-    //         }
-    //         if (index == 0) {
-    //             base2ValueStr += ".";
-    //         }
-    //         index--;
-    //     }
-
-    //     return base2ValueStr;
-    // }
-
     private double convertDecimalToBinary(double doubleToConvert) {
         double base2Value = 0.0;
         double base = 2.0;
         int startIndex = (int) Math.pow(doubleToConvert, 1.0 / base);
         int index = startIndex;
-        
+
         while (!isEqualTo(doubleToConvert, 0.0)) {
             double power = Math.pow(2.0, index);
             if (doubleToConvert >= power) {
                 doubleToConvert -= power;
-                base2Value += Math.pow(10.0, (double)index);
+                base2Value += Math.pow(10.0, (double) index);
             }
             index--;
         }
