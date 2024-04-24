@@ -1,95 +1,69 @@
 package cs250.hw4;
 
+import java.io.*;
+import java.util.*;
+
 public class BTree implements TreeStructure {
 
-    private BTree leftNode;
-    private Integer value;
-    private long timestamp;
-    private BTree rightNode;
-
+    
     @Override
     public void insert(Integer num) {
-        if (this.value == null) {
-            this.value = num;
-            this.timestamp = System.nanoTime();
-            System.out.println(String.format("%d inserted at %d", this.value, this.timestamp));
-        } else {
-            insertIntoLeafNodes(num);
-        }
-    }
 
-    private void insertIntoLeafNodes(Integer num) {
-        if (num < this.value) {
-            // insert left tree
-            this.leftNode = instantiateOrInsertIntoNode(this.leftNode, num);
-        } else if (num > this.value) {
-            // insert right tree
-            this.rightNode = instantiateOrInsertIntoNode(this.rightNode, num);
-        }
-    }
-
-    private BTree instantiateOrInsertIntoNode(BTree node, Integer num) {
-        if (node == null) {
-            node = new BTree();
-        }
-        node.insert(num);
-        return node;
     }
 
     @Override
     public Boolean remove(Integer num) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'remove'");
+        return false;
     }
 
     @Override
     public Long get(Integer num) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'get'");
+        return -1L;
     }
 
     @Override
     public Integer findMaxDepth() {
-        Integer result = 0;
-        if (this.value != null) {
-            result += 1;
-        }
-
-        Integer leftDepth = 0;
-        if (this.leftNode != null) {
-            leftDepth = this.leftNode.findMaxDepth();
-        }
-
-        Integer rightDepth = 0;
-        if (this.rightNode != null) {
-            rightDepth = this.rightNode.findMaxDepth();
-        }
-
-        result += Math.max(leftDepth, rightDepth);
-
-        return result;
+        return -1;
     }
 
     @Override
     public Integer findMinDepth() {
-        Integer result = 0;
-        if (this.value != null) {
-            result += 1;
+        return -1;
+    }
+
+    public static void main(String[] args) throws FileNotFoundException, IOException {
+        File file = new File(args[0]);
+        FileReader fReader = new FileReader(file);
+        BufferedReader bufferedReader = new BufferedReader(fReader);
+        TreeStructure tree = new BTree();
+        Random rng = new Random(42);
+        ArrayList<Integer> nodesToRemove = new ArrayList<>();
+        ArrayList<Integer> nodesToGet = new ArrayList<>();
+        String line = bufferedReader.readLine();
+        while (line != null) {
+            Integer lineInt = Integer.parseInt(line);
+            tree.insert(lineInt);
+            Integer rand = rng.nextInt(10);
+            if (rand < 5)
+                nodesToRemove.add(lineInt);
+            else if (rand >= 5)
+                nodesToGet.add(lineInt);
+            line = bufferedReader.readLine();
         }
-
-        Integer leftDepth = 0;
-        if (this.leftNode != null) {
-            leftDepth = this.leftNode.findMaxDepth();
+        bufferedReader.close();
+        for (int i = 0; i < 10; i++) {
+            System.out.println(nodesToGet.get(i) + " inserted at " + tree.get(nodesToGet.get(i)));
         }
-
-        Integer rightDepth = 0;
-        if (this.rightNode != null) {
-            rightDepth = this.rightNode.findMaxDepth();
+        System.out.println("Max depth: " + tree.findMaxDepth());
+        System.out.println("Min depth: " + tree.findMinDepth());
+        for (Integer num : nodesToRemove) {
+            tree.remove(num);
         }
-
-        result += Math.min(leftDepth, rightDepth);
-
-        return result;
+        for (int i = 0; i < 10; i++) {
+            System.out.println(nodesToGet.get(i) + " inserted at " + tree.get(nodesToGet.get(i)));
+        }
+        System.out.println("Max depth: " + tree.findMaxDepth());
+        System.out.println("Min depth: " + tree.findMinDepth());
     }
 
 }
