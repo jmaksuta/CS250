@@ -49,6 +49,51 @@ public class BinaryTree implements TreeStructure {
     public Boolean remove(Integer num) {
         Boolean result = false;
         if (this.root != null) {
+            if (this.root.value.equals(num)) {
+                removeRoot();
+            } else {
+                this.root.remove(num);
+            }
+        }
+        return result;
+    }
+
+    private Boolean removeRoot() {
+        Boolean result = false;
+        // remove the root node.
+        TreeNode predecessor = this.root;
+        TreeNode successor = null;
+        if (predecessor.hasNoChildren()) {
+            // update parent
+            this.root = null;
+            result = true;
+        } else if (predecessor.hasOneChild()) {
+            if (predecessor.leftNode != null) {
+                this.root = predecessor.leftNode;
+                result = true;
+            } else if (predecessor.rightNode != null) {
+                this.root = predecessor.rightNode;
+                result = true;
+            }
+        } else if (predecessor.hasTwoChildren()) {
+            // find nodes successor
+            successor = findSuccessorRight(predecessor.rightNode);
+            if (successor.rightNode != null) {
+                successor.parentNode.leftNode = successor.rightNode;
+            }
+            successor.leftNode = predecessor.leftNode;
+            successor.rightNode = predecessor.rightNode;
+            successor.parentNode = null;
+            this.root = successor;
+            result = true;
+        }
+        return result;
+    }
+
+    // @Override
+    public Boolean removeold(Integer num) {
+        Boolean result = false;
+        if (this.root != null) {
             if (this.root.value == num) {
                 // remove the root node.
                 TreeNode predecessor = this.root;
@@ -376,12 +421,126 @@ public class BinaryTree implements TreeStructure {
             Long result = -1L;
             if (num.equals(this.value)) {
                 result = this.timestamp;
-            } else if (num < this.value) {
+            } else if (this.leftNode != null && num < this.value) {
                 result = this.leftNode.get(num);
-            } else if (num > this.value) {
+            } else if (this.rightNode != null && num > this.value) {
                 result = this.rightNode.get(num);
             }
             return result;
+        }
+
+        public boolean remove(Integer num) {
+            boolean result = false;
+            // TreeNode parentRef = this.parentNode;
+            // TreeNode successor = null;
+            if (this.leftNode != null && num < this.value) {
+                if (this.leftNode.value.equals(num)) {
+                    result = this.removeLeftNode();
+                } else {
+                    this.leftNode.remove(num);
+                }
+            } else if (this.rightNode != null && num > this.value) {
+                if (this.rightNode.value.equals(num)) {
+                    result = this.removeRightNode();
+                } else {
+                    this.rightNode.remove(num);
+                }
+            }
+            return result;
+        }
+
+        private boolean removeNode(TreeNode predecessor) {
+            boolean result = false;
+            TreeNode parent = predecessor.parentNode;
+            if (parent == null) {
+                // TODO: root node
+                this.removeNode(predecessor);
+            } else if (predecessor == parent.leftNode) {
+                // left node
+                result = parent.removeLeftNode();
+            } else if (predecessor == parent.rightNode) {
+                // right node
+                result = parent.removeRightNode();
+            }
+            return result;
+        }
+
+        private boolean removeLeftNode() {
+            boolean result = false;
+            TreeNode predecessor = this.leftNode;
+            TreeNode successor = null;
+            if (predecessor.hasNoChildren()) {
+                // update parent
+                this.leftNode = null;
+                result = true;
+            } else if (predecessor.hasOneChild()) {
+                if (predecessor.leftNode != null) {
+                    this.leftNode = predecessor.leftNode;
+                    result = true;
+                } else if (predecessor.rightNode != null) {
+                    this.leftNode = predecessor.rightNode;
+                    result = true;
+                }
+            } else if (predecessor.hasTwoChildren()) {
+                // find nodes successor
+                successor = findSuccessorRight(predecessor.rightNode);
+                if (successor.rightNode != null) {
+                    // detach the successor
+                    successor.parentNode.leftNode = successor.rightNode;
+                }
+                successor.leftNode = predecessor.leftNode;
+                // successor.rightNode = predecessor.rightNode;
+                successor.parentNode = this;
+                this.leftNode = successor;
+                result = true;
+            }
+            return result;
+        }
+
+        private boolean removeRightNode() {
+            boolean result = false;
+            TreeNode predecessor = this.rightNode;
+            TreeNode successor = null;
+            if (predecessor.hasNoChildren()) {
+                // update parent
+                this.rightNode = null;
+                result = true;
+            } else if (predecessor.hasOneChild()) {
+                if (predecessor.leftNode != null) {
+                    this.rightNode = predecessor.leftNode;
+                    result = true;
+                } else if (predecessor.rightNode != null) {
+                    this.rightNode = predecessor.rightNode;
+                    result = true;
+                }
+            } else if (predecessor.hasTwoChildren()) {
+                // find nodes successor
+                successor = findSuccessorRight(predecessor.rightNode);
+                if (successor.rightNode != null) {
+                    // detach the successor
+                    successor.parentNode.leftNode = successor.rightNode;
+                }
+                successor.leftNode = predecessor.leftNode;
+                // successor.rightNode = predecessor.rightNode;
+                successor.parentNode = this;
+                this.rightNode = successor;
+                result = true;
+            }
+            return result;
+        }
+
+        private TreeNode findSuccessorLeft(TreeNode current) {
+            while (current.rightNode != null) {
+                current = current.rightNode;
+            }
+            return current;
+        }
+    
+        private TreeNode findSuccessorRight(TreeNode current) {
+            while (current.leftNode != null) {
+                current = current.leftNode;
+            }
+            return current;
         }
 
     }
