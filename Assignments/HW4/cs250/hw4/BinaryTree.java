@@ -1,7 +1,6 @@
 package cs250.hw4;
 
 import java.io.*;
-import java.lang.invoke.ConstantBootstraps;
 import java.util.*;
 
 public class BinaryTree implements TreeStructure {
@@ -57,12 +56,15 @@ public class BinaryTree implements TreeStructure {
             }
         } else if (predecessor.hasTwoChildren()) {
             // find nodes successor
-            successor = findSuccessorRight(predecessor.rightNode);
-
-            if (successor.parentNode != null) {
-                successor.parentNode.detachChild(successor);
+            if (predecessor.rightNode != null) {
+                successor = findSuccessorLeftMost(predecessor.rightNode);
+            } else {
+                successor = findSuccessorRightMost(predecessor.leftNode);
             }
-            // successor.parentNode.attachLeftChild(successor.rightNode);
+            // successor has at most 1 child
+            if (successor.parentNode != null) {
+                successor.parentNode.pop(successor);
+            }
 
             successor.attachLeftChild(predecessor.leftNode);
 
@@ -76,40 +78,44 @@ public class BinaryTree implements TreeStructure {
         return result;
     }
 
-    // public TreeNode findSuccessorLeft(TreeNode current) {
+    // public TreeNode findSuccessorRightMost(TreeNode current) {
     // while (current.rightNode != null) {
     // current = current.rightNode;
     // }
     // return current;
     // }
 
-    // public TreeNode findSuccessorRight(TreeNode current) {
+    // public TreeNode findSuccessorLeftMost(TreeNode current) {
     // while (current.leftNode != null) {
     // current = current.leftNode;
     // }
     // return current;
     // }
-    private TreeNode findSuccessorLeft(TreeNode current) {
+    private TreeNode findSuccessorRightMost(TreeNode current) {
         if (current != null) {
-            while (current.rightNode != null || current.leftNode != null) {
+            // while (current.rightNode != null || current.leftNode != null) {
+            while (current.rightNode != null) {
                 if (current.rightNode != null) {
                     current = current.rightNode;
-                } else {
-                    current = findSuccessorLeft(current.leftNode);
                 }
+                // else {
+                // current = findSuccessorRightMost(current.leftNode);
+                // }
             }
         }
         return current;
     }
 
-    private TreeNode findSuccessorRight(TreeNode current) {
+    private TreeNode findSuccessorLeftMost(TreeNode current) {
         if (current != null) {
-            while (current.rightNode != null || current.leftNode != null) {
+            // while (current.rightNode != null || current.leftNode != null) {
+            while (current.leftNode != null) {
                 if (current.leftNode != null) {
                     current = current.leftNode;
-                } else {
-                    current = findSuccessorRight(current.rightNode);
                 }
+                // else {
+                // current = findSuccessorLeftMost(current.rightNode);
+                // }
             }
         }
         return current;
@@ -192,16 +198,16 @@ public class BinaryTree implements TreeStructure {
     @Override
     public Integer findMaxDepth() {
         Integer result = 0;
-        // result = this.root.findMaxDepth();
-        result = findMaxDepthStack();
+        result = this.root.findMaxDepth();
+        // result = findMaxDepthStack();
         return result;
     }
 
     @Override
     public Integer findMinDepth() {
         Integer result = 0;
-        // result = this.root.findMinDepth();
-        result = findMinDepthStack();
+        result = this.root.findMinDepth();
+        // result = findMinDepthStack();
         return result;
     }
 
@@ -348,49 +354,87 @@ public class BinaryTree implements TreeStructure {
             return result;
         }
 
-        public void swapNodes(TreeNode oldNode, TreeNode newNode) {
-            if (this.leftNode == oldNode) {
+        // public void swapNodes(TreeNode oldNode, TreeNode newNode) {
+        // if (this.leftNode == oldNode) {
 
-                detachChild(oldNode);
-                attachLeftChild(newNode);
-                swapChildren(oldNode, newNode);
+        // detachChild(oldNode);
+        // attachLeftChild(newNode);
+        // swapChildren(oldNode, newNode);
 
-            } else if (this.rightNode == oldNode) {
-                detachChild(oldNode);
-                attachRightChild(newNode);
-                swapChildren(oldNode, newNode);
-            }
-        }
+        // } else if (this.rightNode == oldNode) {
+        // detachChild(oldNode);
+        // attachRightChild(newNode);
+        // swapChildren(oldNode, newNode);
+        // }
+        // }
 
-        private void swapChildren(TreeNode oldNode, TreeNode newNode) {
+        // private void swapChildren(TreeNode oldNode, TreeNode newNode) {
 
-            TreeNode oldLeftNode = oldNode.leftNode;
-            TreeNode oldRightNode = oldNode.rightNode;
+        // TreeNode oldLeftNode = oldNode.leftNode;
+        // TreeNode oldRightNode = oldNode.rightNode;
 
-            TreeNode newLeftNode = newNode.leftNode;
-            TreeNode newRightNode = newNode.rightNode;
+        // TreeNode newLeftNode = newNode.leftNode;
+        // TreeNode newRightNode = newNode.rightNode;
 
-            oldNode.detachChild(oldLeftNode);
-            oldNode.detachChild(oldRightNode);
+        // oldNode.detachChild(oldLeftNode);
+        // oldNode.detachChild(oldRightNode);
 
-            newNode.detachChild(newLeftNode);
-            newNode.detachChild(newRightNode);
+        // newNode.detachChild(newLeftNode);
+        // newNode.detachChild(newRightNode);
 
-            oldNode.attachLeftChild(newLeftNode);
-            oldNode.attachRightChild(newRightNode);
+        // oldNode.attachLeftChild(newLeftNode);
+        // oldNode.attachRightChild(newRightNode);
 
-            newNode.attachLeftChild(oldLeftNode);
-            newNode.attachRightChild(oldRightNode);
+        // newNode.attachLeftChild(oldLeftNode);
+        // newNode.attachRightChild(oldRightNode);
 
-        }
+        // }
 
         public void detachChild(TreeNode node) {
             if (this.leftNode == node) {
-                this.leftNode.parentNode = null;
+                node.parentNode = null;
                 this.leftNode = null;
+
             } else if (this.rightNode == node) {
-                this.rightNode.parentNode = null;
+                node.parentNode = null;
                 this.rightNode = null;
+            }
+        }
+
+        /**
+         * Removes a target child node a parent, attaching the target's children
+         * to the target's parent.
+         * 
+         * @param node
+         */
+        public void pop(TreeNode node) {
+            if (this.leftNode == node) {
+                TreeNode predecessor = this.leftNode;
+                TreeNode successor = null;
+                if (predecessor.hasOneChild()) {
+                    if (predecessor.leftNode != null) {
+                        successor = predecessor.leftNode;
+                    } else {
+                        successor = predecessor.rightNode;
+                    }
+                }
+
+                predecessor.parentNode = null;
+                this.attachLeftChild(successor);
+
+            } else if (this.rightNode == node) {
+                TreeNode predecessor = this.rightNode;
+                TreeNode successor = null;
+                if (predecessor.hasOneChild()) {
+                    if (predecessor.leftNode != null) {
+                        successor = predecessor.leftNode;
+                    } else {
+                        successor = predecessor.rightNode;
+                    }
+
+                }
+                predecessor.parentNode = null;
+                this.attachRightChild(successor);
             }
         }
 
@@ -476,14 +520,12 @@ public class BinaryTree implements TreeStructure {
         public Integer findMaxDepth() {
             Integer result = 0;
             try {
-                // result += 1;
-
-                Integer leftDepth = 0;
+                int leftDepth = 0;
                 if (this.leftNode != null) {
                     leftDepth += this.leftNode.findMaxDepth();
                 }
 
-                Integer rightDepth = 0;
+                int rightDepth = 0;
                 if (this.rightNode != null) {
                     rightDepth += this.rightNode.findMaxDepth();
                 }
@@ -502,12 +544,12 @@ public class BinaryTree implements TreeStructure {
 
             Integer leftDepth = 0;
             if (this.leftNode != null) {
-                leftDepth = this.leftNode.findMaxDepth();
+                leftDepth = this.leftNode.findMinDepth();
             }
 
             Integer rightDepth = 0;
             if (this.rightNode != null) {
-                rightDepth = this.rightNode.findMaxDepth();
+                rightDepth = this.rightNode.findMinDepth();
             }
 
             result += Math.min(leftDepth, rightDepth) + 1;
@@ -547,17 +589,17 @@ public class BinaryTree implements TreeStructure {
 
         public boolean remove(Integer num) {
             boolean result = false;
-            if (this.leftNode != null && num < this.value) {
+            if (this.leftNode != null && num <= this.value) {
                 if (this.leftNode.value.equals(num)) {
                     result = this.removeLeftNode();
                 } else {
-                    this.leftNode.remove(num);
+                    result = this.leftNode.remove(num);
                 }
-            } else if (this.rightNode != null && num > this.value) {
+            } else if (this.rightNode != null && num >= this.value) {
                 if (this.rightNode.value.equals(num)) {
                     result = this.removeRightNode();
                 } else {
-                    this.rightNode.remove(num);
+                    result = this.rightNode.remove(num);
                 }
             }
             return result;
@@ -584,40 +626,37 @@ public class BinaryTree implements TreeStructure {
             TreeNode predecessor = this.leftNode;
             TreeNode successor = null;
             if (predecessor.hasNoChildren()) {
-                // update parent
-                this.detachChild(predecessor);
-                // this.leftNode = null;
-                // predecessor.parentNode = null;
-                // pivot();
                 result = true;
             } else if (predecessor.hasOneChild()) {
                 if (predecessor.leftNode != null) {
-                    this.detachChild(predecessor);
                     this.attachLeftChild(predecessor.leftNode);
                     // pivot();
                     result = true;
                 } else if (predecessor.rightNode != null) {
-                    this.detachChild(predecessor);
                     this.attachLeftChild(predecessor.rightNode);
                     // pivot();
                     result = true;
                 }
             } else if (predecessor.hasTwoChildren()) {
                 // find nodes successor
-                successor = findSuccessorLeft(predecessor.leftNode);
-                // detach the successor
-                if (successor.parentNode != null) {
-                    successor.parentNode.detachChild(successor);
+                successor = findSuccessorRightMost(predecessor.leftNode);
+                if (successor == null) {
+                    successor = predecessor.leftNode;
                 }
-                // successor.parentNode.attachRightChild(successor.leftNode);
-
+                // detach the successor
+                // successor has at most 1 child
+                if (successor.parentNode != null) {
+                    successor.parentNode.pop(successor);
+                }
                 successor.attachLeftChild(predecessor.leftNode);
                 successor.attachRightChild(predecessor.rightNode);
-
+                
                 this.attachLeftChild(successor);
-                // pivot();
                 result = true;
             }
+            predecessor.parentNode = null;
+            this.leftNode = successor;
+
             return result;
         }
 
@@ -626,30 +665,25 @@ public class BinaryTree implements TreeStructure {
             TreeNode predecessor = this.rightNode;
             TreeNode successor = null;
             if (predecessor.hasNoChildren()) {
-                // update parent
-                this.detachChild(predecessor);
-                // this.rightNode = null;
-                // predecessor.parentNode = null;
-
                 result = true;
             } else if (predecessor.hasOneChild()) {
                 if (predecessor.leftNode != null) {
-                    this.detachChild(predecessor);
                     this.attachRightChild(predecessor.leftNode);
                     result = true;
                 } else if (predecessor.rightNode != null) {
-                    this.detachChild(predecessor);
                     this.attachRightChild(predecessor.rightNode);
                     result = true;
                 }
             } else if (predecessor.hasTwoChildren()) {
                 // find nodes successor
-                successor = findSuccessorRight(predecessor.rightNode);
+                successor = findSuccessorLeftMost(predecessor.rightNode);
+                if (successor == null) {
+                    successor = predecessor.leftNode;
+                }
                 // detach the successor
                 if (successor.parentNode != null) {
-                    successor.parentNode.detachChild(successor);
+                    successor.parentNode.pop(successor);
                 }
-                // successor.parentNode.attachLeftChild(successor.rightNode);
 
                 successor.attachLeftChild(predecessor.leftNode);
 
@@ -658,36 +692,43 @@ public class BinaryTree implements TreeStructure {
                 this.attachRightChild(successor);
                 result = true;
             }
+            predecessor.parentNode = null;
+            this.rightNode = successor;
+
             return result;
         }
 
-        private TreeNode findSuccessorLeft(TreeNode current) {
+        private TreeNode findSuccessorRightMost(TreeNode current) {
             if (current != null) {
-                while (current.rightNode != null || current.leftNode != null) {
+                // while (current.rightNode != null || current.leftNode != null) {
+                while (current.rightNode != null) {
                     if (current.rightNode != null) {
                         current = current.rightNode;
-                    } else {
-                        current = findSuccessorLeft(current.leftNode);
                     }
+                    // else {
+                    // current = findSuccessorRightMost(current.leftNode);
+                    // }
                 }
             }
             return current;
         }
 
-        // private TreeNode findSuccessorRight(TreeNode current) {
+        // private TreeNode findSuccessorLeftMost(TreeNode current) {
         // while (current.leftNode != null) {
         // current = current.leftNode;
         // }
         // return current;
         // }
-        private TreeNode findSuccessorRight(TreeNode current) {
+        private TreeNode findSuccessorLeftMost(TreeNode current) {
             if (current != null) {
-                while (current.rightNode != null || current.leftNode != null) {
+                // while (current.rightNode != null || current.leftNode != null) {
+                while (current.leftNode != null) {
                     if (current.leftNode != null) {
                         current = current.leftNode;
-                    } else {
-                        current = findSuccessorRight(current.rightNode);
                     }
+                    // else {
+                    // current = findSuccessorLeftMost(current.rightNode);
+                    // }
                 }
             }
             return current;
