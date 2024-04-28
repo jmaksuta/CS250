@@ -121,7 +121,7 @@ public class BTree implements TreeStructure {
                     insertNode.addPage(new BTree(num));
                 } else {
                     this.split(insertNode);
-                    insertNode.insert(num);
+                    this.insert(num);
                 }
             } else {
                 insertNode.insert(num);
@@ -171,13 +171,13 @@ public class BTree implements TreeStructure {
 
         BTree current = this;
         while (!found || current.isLeaf()) {
-            Integer[] separatorKeys = getSeparatorKeys();
+            Integer[] separatorKeys = current.getSeparatorKeys();
             if (num < separatorKeys[0]) {
                 current = current.pages.get(0);
             } else if (current.pages.size() > 0 && num >= separatorKeys[separatorKeys.length - 1]) {
                 current = current.pages.get(current.pages.size() - 1);
             } else {
-                current = binarySearch(num, separatorKeys);
+                current = current.binarySearch(num, separatorKeys);
             }
             if (current != null && (current.key != null && current.key.equals(num))) {
                 result = current;
@@ -222,14 +222,21 @@ public class BTree implements TreeStructure {
         BTree highTree = new BTree(high.get(0).key);
         highTree.pages = new ArrayList<>(high);
 
-        // remove the original tree
-        this.pages.remove(bTree);
+        if (this.equals(bTree)) {
+            this.pages = new ArrayList<>();
+        } else {
+            if (this.pages.contains(bTree)) {
+                // remove the original tree
+                this.pages.remove(bTree);
+            }
+        }
+
         // this.pages.sort(comparator);
         // this.key = this.pages.get(0).key;
 
         if (this.getOccupancy() + 2 > this.getCapacity()) {
             // must insert as as internalNode
-            BTree internalNode = new BTree();
+            BTree internalNode = new BTree(lowTree.key);
             internalNode.addPage(lowTree);
             internalNode.addPage(highTree);
 
