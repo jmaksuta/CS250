@@ -114,14 +114,14 @@ public class BTree implements TreeStructure {
 
     private boolean removePage(BTree page) {
         boolean result = false;
-        if (this.pages.contains(page)) {
+        if (this.pages != null && this.pages.contains(page)) {
             result = this.pages.remove(page);
             this.pages.sort(comparator);
             if (this.pages.size() > 0) {
                 this.key = this.pages.get(0).key;
             }
         }
-        if (this.pages.size() == 0) {
+        if (this.pages != null && this.pages.size() == 0) {
             this.pages = null;
         }
         return result;
@@ -172,12 +172,12 @@ public class BTree implements TreeStructure {
         return result;
     }
 
-    private BTree getPageToRemove(Integer num) {
+    private BTree getLeafToRemove(Integer num) {
         BTree result = null;
 
         BTree current = this;
 
-        if (current.everyChildIsALeaf()) {
+        if (current.pages != null && current.everyChildIsALeaf()) {
             Integer[] separatorKeys = current.getSeparatorKeys();
             if (num < separatorKeys[0]) {
                 current = current.pages.get(0);
@@ -212,17 +212,20 @@ public class BTree implements TreeStructure {
 
         BTree current = this;
         while (!found || current.isLeaf()) {
-            Integer[] separatorKeys = current.getSeparatorKeys();
-            if (num < separatorKeys[0]) {
-                current = current.pages.get(0);
-            } else if (current.pages.size() > 0 && num >= separatorKeys[separatorKeys.length - 1]) {
-                current = current.pages.get(current.pages.size() - 1);
-            } else {
-                current = current.binarySearch(num, separatorKeys);
+            if (current.pages != null) {
+                Integer[] separatorKeys = current.getSeparatorKeys();
+                if (num < separatorKeys[0]) {
+                    current = current.pages.get(0);
+                } else if (current.pages.size() > 0 && num >= separatorKeys[separatorKeys.length - 1]) {
+                    current = current.pages.get(current.pages.size() - 1);
+                } else {
+                    current = current.binarySearch(num, separatorKeys);
+                }
             }
             if (current != null && (current.key != null && current.key.equals(num))) {
                 result = current;
                 found = true;
+                break;
             }
         }
 
@@ -300,50 +303,124 @@ public class BTree implements TreeStructure {
         if (!removalNode.everyChildIsALeaf()) {
             result = removalNode.remove(num);
         } else {
-            BTree toRemove = removalNode.getPageToRemove(num);
-            result = removalNode.removePage(toRemove);
+            BTree leafToRemove = removalNode.getLeafToRemove(num);
+            if (leafToRemove != null) {
+                result = removalNode.removePage(leafToRemove);
+            }
         }
         if (result) {
-
-            if (removalNode.getOccupancy() < removalNode.getThreshold()) {
-                // TODO: must merge
+            if (shouldPerformMerge(removalNode)) {
                 this.merge(removalNode);
+            }
+            if (removalNode.pages == null || removalNode.pages.size() == 0) {
+                this.removePage(removalNode);
+            }
+
+            if (this.pages != null) {
+                this.pages.sort(comparator);
+                this.key = this.pages.get(0).key;
             }
         }
         return result;
     }
 
+    private boolean shouldPerformMerge(BTree target) {
+        boolean neighborCanMerge = this.leftNeighborCanMergeTarget(target) || this.rightNeighborCanMergeTarget(target);
+
+        return target.isUnderflowCondition() && neighborCanMerge;
+    }
+
+    private boolean leftNeighborCanMergeTarget(BTree target) {
+        boolean result = false;
+        BTree leftNeighbor = getLeftNeighbor(target);
+        if (leftNeighbor != null) {
+            result = leftNeighbor.canMergeTarget(target);
+        }
+        return result;
+    }
+
+    private boolean leftNeighborCanMergeOnePage(BTree target) {
+        boolean result = false;
+        BTree leftNeighbor = getLeftNeighbor(target);
+        if (leftNeighbor != null) {
+            result = leftNeighbor.canMergeOnePage();
+        }
+        return result;
+    }
+
+    private boolean rightNeighborCanMergeOnePage(BTree target) {
+        boolean result = false;
+        BTree rightNeighbor = getRightNeighbor(target);
+        if (rightNeighbor != null) {
+            result = rightNeighbor.canMergeOnePage();
+        }
+        return result;
+    }
+
+    private BTree getLeftNeighbor(BTree target) {
+        BTree result = null;
+        int targetIndex = this.pages.indexOf(target);
+        int leftNeighborIndex = targetIndex - 1;
+        if (leftNeighborIndex > -1) {
+            result = this.pages.get(leftNeighborIndex);
+        }
+        return result;
+    }
+
+    private boolean rightNeighborCanMergeTarget(BTree target) {
+        boolean result = false;
+        BTree rightNeighbor = getRightNeighbor(target);
+        if (rightNeighbor != null) {
+            result = rightNeighbor.canMergeTarget(target);
+        }
+        return result;
+    }
+
+    private BTree getRightNeighbor(BTree target) {
+        BTree result = null;
+        int targetIndex = this.pages.indexOf(target);
+        int rightNeighborIndex = targetIndex + 1;
+        if (rightNeighborIndex < this.pages.size()) {
+            result = this.pages.get(rightNeighborIndex);
+        }
+        return result;
+    }
+
+    private boolean canMergeTarget(BTree target) {
+        return (this.getOccupancy() + target.getOccupancy()) < this.getCapacity();
+    }
+
+    private boolean canMergeOnePage() {
+        return (this.getOccupancy() + 1) < this.getCapacity();
+    }
+
+    private boolean isUnderflowCondition() {
+        return this.getOccupancy() < this.getThreshold();
+    }
+
     private void merge(BTree bTree) {
-        int pageIndex = this.pages.indexOf(bTree);
+        while (bTree.pages != null && bTree.pages.size() > 0 && this.leftNeighborCanMergeOnePage(bTree)) {
+            BTree toRemove = bTree.pages.get(0);
+            BTree leftNeighbor = this.getLeftNeighbor(bTree);
 
-        boolean canMergeLeft;
-        boolean canMergeRight;
-
-        BTree leftNode = null;
-        BTree rightNode = null;
-        // look for room in left neighbor
-        int leftIndex = pageIndex - 1;
-        if (leftIndex >= 0 && leftIndex < this.pages.size() - 1) {
-            leftNode = this.pages.get(leftIndex);
-
-            while (bTree.pages.size() > 0 && leftNode.getOccupancy() < leftNode.getCapacity()) {
-                BTree removed = bTree.pages.remove(0);
-                leftNode.addPage(removed);
-            }
-        }
-        // look for room in right neighbor
-        int rightIndex = pageIndex + 1;
-        if (rightIndex > 0 && rightIndex < this.pages.size()) {
-            rightNode = this.pages.get(rightIndex);
-
-            while (bTree.pages.size() > 0 && rightNode.getOccupancy() < rightNode.getCapacity()) {
-                BTree removed = bTree.pages.remove(0);
-                rightNode.addPage(removed);
+            boolean wasRemoved = bTree.removePage(toRemove);
+            if (wasRemoved) {
+                leftNeighbor.addPage(toRemove);
             }
         }
 
-        if (this.pages.get(pageIndex).isLeaf()) {
-            this.pages.remove(pageIndex);
+        while (bTree.pages != null && bTree.pages.size() > 0 && this.rightNeighborCanMergeOnePage(bTree)) {
+            BTree toRemove = bTree.pages.get(0);
+            BTree rightNeighbor = this.getRightNeighbor(bTree);
+
+            boolean wasRemoved = bTree.removePage(toRemove);
+            if (wasRemoved) {
+                rightNeighbor.addPage(toRemove);
+            }
+        }
+
+        if (bTree.pages == null || bTree.pages.size() == 0) {
+            bTree = null;
         }
     }
 
