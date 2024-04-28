@@ -109,35 +109,10 @@ public class BinaryTree implements TreeStructure {
         return result;
     }
 
-    public TreeNode search(Integer num) {
-        TreeNode current = this.root;
-        while (current != null && current.value != num) {
-            if (num < current.value) {
-                current = current.leftNode;
-            } else if (num > current.value) {
-                current = current.rightNode;
-            }
-        }
-        return current;
-    }
-
-    public static void inorder(TreeStructure tree) {
-        inorder(tree);
-    }
-
-    public void inorder(TreeNode node) {
-        if (node != null) {
-            inorder(node.leftNode);
-            System.out.println(node.value);
-            inorder(node.rightNode);
-        }
-    }
-
     @Override
     public Integer findMaxDepth() {
         Integer result = 0;
         result = this.root.findMaxDepth();
-        // result = findMaxDepthStack();
         return result;
     }
 
@@ -145,66 +120,6 @@ public class BinaryTree implements TreeStructure {
     public Integer findMinDepth() {
         Integer result = 0;
         result = this.root.findMinDepth();
-        // result = findMinDepthStack();
-        return result;
-    }
-
-    public Integer findMaxDepthStack() {
-        int result = 0;
-
-        Stack<TreeNode> stack = new Stack<TreeNode>();
-
-        TreeNode current = this.root;
-
-        stack.push(current);
-
-        while (!stack.isEmpty()) {
-
-            while (current != null) {
-                stack.push(current);
-                current = current.leftNode;
-            }
-            if (current == null && !stack.isEmpty()) {
-                TreeNode popped = stack.pop();
-                if (popped.hasNoChildren()) {
-                    int depth = popped.getDepth();
-                    if (depth > result) {
-                        result = depth;
-                    }
-                }
-                // System.out.print(popped.toString());
-                current = popped.rightNode;
-            }
-        }
-
-        return result;
-    }
-
-    public Integer findMinDepthStack() {
-        int result = Integer.MAX_VALUE;
-
-        Stack<TreeNode> stack = new Stack<TreeNode>();
-        TreeNode current = this.root;
-        stack.push(current);
-
-        while (!stack.isEmpty()) {
-            while (current != null) {
-                stack.push(current);
-                current = current.leftNode;
-            }
-            if (current == null && !stack.isEmpty()) {
-                TreeNode popped = stack.pop();
-                if (popped.hasNoChildren()) {
-                    int depth = popped.getDepth();
-                    if (depth < result) {
-                        result = depth;
-                    }
-                }
-                // System.out.print(popped.toString());
-                current = popped.rightNode;
-            }
-        }
-
         return result;
     }
 
@@ -249,16 +164,6 @@ public class BinaryTree implements TreeStructure {
 
         public boolean isOnlyRightChild() {
             return this.isRightChild() && this.parentNode.leftNode == null;
-        }
-
-        public int getDepth() {
-            int result = 0;
-            TreeNode current = this;
-            while (current != null) {
-                result += 1;
-                current = current.parentNode;
-            }
-            return result;
         }
 
         public void detachChild(TreeNode node) {
