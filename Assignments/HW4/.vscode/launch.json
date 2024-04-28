@@ -6,6 +6,16 @@
     "configurations": [
         {
             "type": "java",
+            "name": "BTree",
+            "request": "launch",
+            "mainClass": "cs250.hw4.BTree",
+            "projectName": "HW4_a923568",
+            "args": [
+                "data.txt"
+            ]
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"
