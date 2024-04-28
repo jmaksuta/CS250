@@ -5,7 +5,7 @@ import java.util.*;
 
 public class BTree implements TreeStructure {
 
-    private static final int ORDER = 4; // 64;
+    private static final int ORDER = 64;
 
     private Integer key;
     private long timestamp;
@@ -423,12 +423,39 @@ public class BTree implements TreeStructure {
 
     @Override
     public Integer findMaxDepth() {
-        return -1;
+        Integer result = 0;
+
+        if (this.everyChildIsALeaf()) {
+            result = 1;
+        } else {
+            Integer maxChildDepth = 0;
+            if (this.pages != null && this.pages.size() > 0) {
+                for (int n = 0; n < this.pages.size(); n++) {
+                    Integer childDepth = this.pages.get(n).findMaxDepth();
+                    maxChildDepth = Math.max(childDepth, maxChildDepth);
+                }
+            }
+            result += maxChildDepth + 1;
+        }
+        return result;
     }
 
     @Override
     public Integer findMinDepth() {
-        return -1;
+        Integer result = 0;
+        if (this.pages == null || this.everyChildIsALeaf()) {
+            result = 1;
+        } else {
+            Integer minChildDepth = Integer.MAX_VALUE;
+            if (this.pages != null && this.pages.size() > 0) {
+                for (int n = 0; n < this.pages.size(); n++) {
+                    Integer childDepth = this.pages.get(n).findMinDepth();
+                    minChildDepth = Math.min(childDepth, minChildDepth);
+                }
+            }
+            result += minChildDepth + 1;
+        }
+        return result;
     }
 
     Comparator<BTree> comparator = new Comparator<BTree>() {
