@@ -37,7 +37,23 @@ public class BTree implements TreeStructure {
     }
 
     private boolean isLeaf() {
-        return (!isRoot() && this.pages == null);
+        return (this.pages == null);
+    }
+
+    private boolean everyChildIsALeaf() {
+        boolean result = false;
+        if (this.pages == null) {
+            result = true;
+        } else {
+            result = true;
+            for (BTree node : this.pages) {
+                if (node.pages != null) {
+                    result = false;
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     private int getCapacity() {
@@ -74,7 +90,7 @@ public class BTree implements TreeStructure {
         if (this.pages == null) {
             this.pages = new ArrayList<>();
             // add the default node
-            this.pages.add(new BTree(null));
+            // this.pages.add(new BTree(null));
         }
         this.pages.add(newPage);
         this.pages.sort(comparator);
@@ -84,11 +100,11 @@ public class BTree implements TreeStructure {
         if (this.pages == null) {
             this.pages = new ArrayList<>();
             // add the default node
-            this.pages.add(new BTree(null));
+            // this.pages.add(new BTree(this.key));
         }
         this.pages.add(page);
         this.pages.sort(comparator);
-        this.key = this.pages.get(1).key;
+        this.key = this.pages.get(0).key;
     }
 
     @Override
@@ -97,49 +113,50 @@ public class BTree implements TreeStructure {
             // root node
             initializeRoot(num);
         } else {
-            if (this.isLeaf()) {
-                this.addPage(new BTree(this.key));
-                this.addPage(new BTree(num));
-            } else if (this.getOccupancy() < this.getCapacity()) {
-                // add to this.pages
+            BTree insertNode = findInsertionNode(num);
 
-                // its less than capacity, find the separator, and insert it.
-                BTree separator = findSeparator(num);
-                if (separator == null) {
-                    separator = new BTree(num);
-                    this.addPage(separator);
+            if (insertNode.everyChildIsALeaf()) {
 
-                    // } else if (separator.isLeaf()) {
-                    // // make this node an inner node
-                    // // initialize the pages and insert the value.
-
-                    // this.addPage(new BTree(separator.key));
-                    // this.addPage(new BTree(num));
-
-                } else if (separator.getOccupancy() < separator.getCapacity()) {
-                    separator.insert(num);
+                if (insertNode.getOccupancy() < insertNode.getCapacity()) {
+                    insertNode.addPage(new BTree(num));
                 } else {
-                    // must split
-                    this.split(separator);
-                    this.insert(num);
+                    this.split(insertNode);
+                    insertNode.insert(num);
                 }
-
             } else {
-                // must split
-                this.split(this);
-                this.insert(num);
+                insertNode.insert(num);
             }
+
         }
 
+    }
+
+    private BTree findInsertionNode(Integer num) {
+        BTree result = null;
+
+        BTree current = this;
+        // while (!current.everyChildIsALeaf()) {
+        if (!current.everyChildIsALeaf()) {
+            Integer[] separatorKeys = current.getSeparatorKeys();
+            if (num < separatorKeys[0]) {
+                current = current.pages.get(0);
+            } else if (current.pages.size() > 0 && num >= separatorKeys[separatorKeys.length - 1]) {
+                current = current.pages.get(current.pages.size() - 1);
+            } else {
+                current = current.binarySearch(num, separatorKeys);
+            }
+        }
+        // }
+        result = current;
+
+        return result;
     }
 
     private BTree findSeparator(int num) {
         BTree result = null;
         Integer[] separatorKeys = getSeparatorKeys();
         if (num < separatorKeys[0]) {
-            if (this.pages.size() > 1 && this.pages.get(1).key == separatorKeys[0]) {
-                result = this.pages.get(0);
-            }
+            result = this.pages.get(0);
         } else if (this.pages.size() > 0 && num >= separatorKeys[separatorKeys.length - 1]) {
             result = this.pages.get(this.pages.size() - 1);
         } else {
@@ -167,7 +184,7 @@ public class BTree implements TreeStructure {
                 found = true;
             }
         }
-        
+
         return result;
     }
 
@@ -179,7 +196,7 @@ public class BTree implements TreeStructure {
     private BTree binarySearch(int num, Integer[] separatorKeys, int startIndex, int endIndex) {
         BTree result = null;
 
-        int medianIndex = endIndex - startIndex;
+        int medianIndex = (startIndex + endIndex) / 2;
         int medianKey = separatorKeys[medianIndex];
 
         if (num >= medianKey && num < separatorKeys[medianIndex + 1]) {
@@ -197,14 +214,35 @@ public class BTree implements TreeStructure {
         Integer targetOccupancy = getCapacity() / 2;
 
         List<BTree> low = bTree.pages.subList(0, targetOccupancy);
-        List<BTree> high = bTree.pages.subList(targetOccupancy, bTree.pages.size() - 1);
+        List<BTree> high = bTree.pages.subList(targetOccupancy, bTree.pages.size());
 
-        bTree.pages = new ArrayList<>(low);
+        BTree lowTree = new BTree(low.get(0).key);
+        lowTree.pages = new ArrayList<>(low);
 
-        BTree newPage = high.get(0);
-        newPage.pages = new ArrayList<>(high);
+        BTree highTree = new BTree(high.get(0).key);
+        highTree.pages = new ArrayList<>(high);
 
-        this.addPage(newPage);
+        // remove the original tree
+        this.pages.remove(bTree);
+        // this.pages.sort(comparator);
+        // this.key = this.pages.get(0).key;
+
+        if (this.getOccupancy() + 2 > this.getCapacity()) {
+            // must insert as as internalNode
+            BTree internalNode = new BTree();
+            internalNode.addPage(lowTree);
+            internalNode.addPage(highTree);
+
+            // bTree.pages = new ArrayList<>();
+            // bTree.addPage(lowTree);
+            // bTree.addPage(highTree);
+            this.addPage(internalNode);
+        } else {
+            // add the new pages to this tree.
+            this.addPage(lowTree);
+            this.addPage(highTree);
+        }
+
     }
 
     @Override
