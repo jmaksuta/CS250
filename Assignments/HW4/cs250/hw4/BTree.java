@@ -3,21 +3,208 @@ package cs250.hw4;
 import java.io.*;
 import java.util.*;
 
-import javax.management.modelmbean.InvalidTargetObjectTypeException;
-
 public class BTree implements TreeStructure {
 
-    private static final int ORDER = 64;
+    private static final int ORDER = 4; // 64;
 
-    private BTreePage root;
+    private Integer key;
+    private long timestamp;
+
+    private ArrayList<BTree> pages;
+
+    public BTree() {
+        super();
+    }
+
+    public BTree(Integer key) {
+        super();
+        this.key = key;
+        this.timestamp = System.nanoTime();
+        // this.pages = new ArrayList<>();
+        // this.pages.add(this);
+    }
+
+    private boolean isRoot() {
+        return (this.key == null);
+    }
+
+    private boolean isRootUninitialized() {
+        return (isRoot() && this.pages == null);
+    }
+
+    private boolean isInnerNode() {
+        return (!isRoot() && this.pages != null);
+    }
+
+    private boolean isLeaf() {
+        return (!isRoot() && this.pages == null);
+    }
+
+    private int getCapacity() {
+        return ORDER;
+    }
+
+    private int getOccupancy() {
+        int result = 0;
+        if (this.pages != null) {
+            result = this.pages.size();
+        }
+        return result;
+    }
+
+    private Integer[] getSeparatorKeys() {
+        List<Integer> list = new ArrayList<>();
+        if (this.pages != null) {
+            if (this.pages.size() == 1) {
+                list.add(this.pages.get(0).key);
+            } else if (this.pages.size() == 2) {
+                list.add(this.pages.get(1).key);
+            } else if (this.pages.size() > 1) {
+                for (int n = 1; n < this.pages.size(); n++) {
+                    list.add(this.pages.get(n).key);
+                }
+            }
+        }
+        return list.toArray(new Integer[] {});
+    }
+
+    private void initializeRoot(Integer num) {
+        // root node
+        BTree newPage = new BTree(num);
+        if (this.pages == null) {
+            this.pages = new ArrayList<>();
+            // add the default node
+            this.pages.add(new BTree(null));
+        }
+        this.pages.add(newPage);
+        this.pages.sort(comparator);
+    }
+
+    private void addPage(BTree page) {
+        if (this.pages == null) {
+            this.pages = new ArrayList<>();
+            // add the default node
+            this.pages.add(new BTree(null));
+        }
+        this.pages.add(page);
+        this.pages.sort(comparator);
+        this.key = this.pages.get(1).key;
+    }
 
     @Override
     public void insert(Integer num) {
-        if (root == null) {
-            root = new BTreePage(num);
+        if (this.isRootUninitialized()) {
+            // root node
+            initializeRoot(num);
         } else {
-            root.insert(num);
+            if (this.isLeaf()) {
+                this.addPage(new BTree(this.key));
+                this.addPage(new BTree(num));
+            } else if (this.getOccupancy() < this.getCapacity()) {
+                // add to this.pages
+
+                // its less than capacity, find the separator, and insert it.
+                BTree separator = findSeparator(num);
+                if (separator == null) {
+                    separator = new BTree(num);
+                    this.addPage(separator);
+
+                    // } else if (separator.isLeaf()) {
+                    // // make this node an inner node
+                    // // initialize the pages and insert the value.
+
+                    // this.addPage(new BTree(separator.key));
+                    // this.addPage(new BTree(num));
+
+                } else if (separator.getOccupancy() < separator.getCapacity()) {
+                    separator.insert(num);
+                } else {
+                    // must split
+                    this.split(separator);
+                    this.insert(num);
+                }
+
+            } else {
+                // must split
+                this.split(this);
+                this.insert(num);
+            }
         }
+
+    }
+
+    private BTree findSeparator(int num) {
+        BTree result = null;
+        Integer[] separatorKeys = getSeparatorKeys();
+        if (num < separatorKeys[0]) {
+            if (this.pages.size() > 1 && this.pages.get(1).key == separatorKeys[0]) {
+                result = this.pages.get(0);
+            }
+        } else if (this.pages.size() > 0 && num >= separatorKeys[separatorKeys.length - 1]) {
+            result = this.pages.get(this.pages.size() - 1);
+        } else {
+            result = binarySearch(num, separatorKeys);
+        }
+        return result;
+    }
+
+    private BTree findValue(int num) {
+        BTree result = null;
+        boolean found = false;
+
+        BTree current = this;
+        while (!found || current.isLeaf()) {
+            Integer[] separatorKeys = getSeparatorKeys();
+            if (num < separatorKeys[0]) {
+                current = current.pages.get(0);
+            } else if (current.pages.size() > 0 && num >= separatorKeys[separatorKeys.length - 1]) {
+                current = current.pages.get(current.pages.size() - 1);
+            } else {
+                current = binarySearch(num, separatorKeys);
+            }
+            if (current != null && (current.key != null && current.key.equals(num))) {
+                result = current;
+                found = true;
+            }
+        }
+        
+        return result;
+    }
+
+    private BTree binarySearch(int num, Integer[] separatorKeys) {
+
+        return binarySearch(num, separatorKeys, 0, separatorKeys.length - 1);
+    }
+
+    private BTree binarySearch(int num, Integer[] separatorKeys, int startIndex, int endIndex) {
+        BTree result = null;
+
+        int medianIndex = endIndex - startIndex;
+        int medianKey = separatorKeys[medianIndex];
+
+        if (num >= medianKey && num < separatorKeys[medianIndex + 1]) {
+            // to find the page index from separator index, add 1 to separator index
+            result = this.pages.get(medianIndex + 1);
+        } else if (num < medianKey) {
+            result = binarySearch(num, separatorKeys, startIndex, medianIndex - 1);
+        } else if (num > medianKey) {
+            result = binarySearch(num, separatorKeys, medianIndex + 1, endIndex);
+        }
+        return result;
+    }
+
+    private void split(BTree bTree) {
+        Integer targetOccupancy = getCapacity() / 2;
+
+        List<BTree> low = bTree.pages.subList(0, targetOccupancy);
+        List<BTree> high = bTree.pages.subList(targetOccupancy, bTree.pages.size() - 1);
+
+        bTree.pages = new ArrayList<>(low);
+
+        BTree newPage = high.get(0);
+        newPage.pages = new ArrayList<>(high);
+
+        this.addPage(newPage);
     }
 
     @Override
@@ -27,7 +214,12 @@ public class BTree implements TreeStructure {
 
     @Override
     public Long get(Integer num) {
-        return -1L;
+        Long result = -1L;
+        BTree found = findValue(num);
+        if (found != null) {
+            result = found.timestamp;
+        }
+        return result;
     }
 
     @Override
@@ -40,121 +232,17 @@ public class BTree implements TreeStructure {
         return -1;
     }
 
-    private class BTreePage {
-
-        ArrayList<BTreePage> pages;
-        BTreePage parent;
-
-        private Integer key;
-        private long timestamp;
-
-        public BTreePage(Integer key) {
-            super();
-            this.key = key;
-            this.timestamp = System.nanoTime();
-            this.pages = new ArrayList<>();
-            this.parent = null;
-        }
-
-        public BTreePage(Integer key, BTreePage parent) {
-            super();
-            this.key = key;
-            this.timestamp = System.nanoTime();
-            this.pages = new ArrayList<>();
-            this.parent = parent;
-        }
-
-        private int getCapacity() {
-            return ORDER;
-        }
-
-        public void insert(Integer num) {
-            if (this.pages.isEmpty()) {
-                BTreePage newPage = new BTreePage(num, this);
-                this.pages.add(newPage);
-                this.pages.sort(comparator);
-            } else if (this.pages.size() < getCapacity()) {
-                BTreePage newPage = new BTreePage(num, this);
-                this.pages.add(newPage);
-                for (int n = 0; n < this.pages.size(); n++) {
-                    if (n == 0) {
-                        if (num < this.pages.get(n).key) {
-                            this.pages.get(n).insert(num);
-                            break;
-                        }
-                    } else if (n == this.pages.size() - 1) {
-
-                    } else {
-                        if (this.pages.get(n).key <= num && num < this.pages.get(n + 1).key) {
-                            this.pages.get(n).insert(num);
-                        }
-                    }
-                }
-            } else {
-                // TODO: at capacity must split
-                if (this.parent == null) {
-                    BTreePage newPage = new BTreePage(num, this.parent);
-
-                    // split this.pages
-                    this.insert(num);
-                } else {
-
-                    Integer targetOccupancy = getCapacity() / 2;
-
-                    List<BTreePage> low = this.pages.subList(0, targetOccupancy);
-                    List<BTreePage> high = this.pages.subList(targetOccupancy, this.pages.size() - 1);
-
-                    Integer lowKey = low.get(0).key;
-                    Integer highKey = high.get(0).key;
-
-                    if (num >= lowKey && num < highKey) {
-                        BTreePage newPage = new BTreePage(num, low.get(0));
-                        low.add(newPage);
-                        low.sort(comparator);
-                    } else if (num >= highKey) {
-                        BTreePage newPage = new BTreePage(num, high.get(0));
-                        high.add(newPage);
-                        high.sort(comparator);
-                    }
-
-                    this.pages = new ArrayList<>(low);
-
-                    BTreePage newPage = high.get(0);
-                    newPage.pages = new ArrayList<>(high);
-
-                    if (this.parent != null) {
-                        int currIndex = this.parent.pages.indexOf(this);
-                        this.parent.pages.add(currIndex + 1, newPage);
-
-                        this.parent.insert(num);
-                    }
-                }
-            }
-        }
-
-        public Boolean remove(Integer num) {
-            return false;
-        }
-
-        public Long get(Integer num) {
-            return -1L;
-        }
-
-        public Integer findMaxDepth() {
-            return -1;
-        }
-
-        public Integer findMinDepth() {
-            return -1;
-        }
-
-    }
-
-    Comparator<BTreePage> comparator = new Comparator<BTree.BTreePage>() {
+    Comparator<BTree> comparator = new Comparator<BTree>() {
 
         @Override
-        public int compare(BTreePage arg0, BTreePage arg1) {
-            return arg0.key - arg1.key;
+        public int compare(BTree arg0, BTree arg1) {
+            int result = 0;
+            if (arg1.key == null || arg0.key > arg1.key) {
+                result = 1;
+            } else if (arg0.key == null || arg0.key < arg1.key) {
+                result = -1;
+            }
+            return result;
         }
 
     };
