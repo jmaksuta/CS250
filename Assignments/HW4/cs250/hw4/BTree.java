@@ -1,6 +1,7 @@
 package cs250.hw4;
 
 import java.io.*;
+import java.text.BreakIterator;
 import java.util.*;
 
 public class BTree implements TreeStructure {
@@ -68,6 +69,10 @@ public class BTree implements TreeStructure {
         return result;
     }
 
+    private int getThreshold() {
+        return (int) (this.getCapacity() / 2);
+    }
+
     private Integer[] getSeparatorKeys() {
         List<Integer> list = new ArrayList<>();
         if (this.pages != null) {
@@ -107,6 +112,21 @@ public class BTree implements TreeStructure {
         this.key = this.pages.get(0).key;
     }
 
+    private boolean removePage(BTree page) {
+        boolean result = false;
+        if (this.pages.contains(page)) {
+            result = this.pages.remove(page);
+            this.pages.sort(comparator);
+            if (this.pages.size() > 0) {
+                this.key = this.pages.get(0).key;
+            }
+        }
+        if (this.pages.size() == 0) {
+            this.pages = null;
+        }
+        return result;
+    }
+
     @Override
     public void insert(Integer num) {
         if (this.isRootUninitialized()) {
@@ -135,7 +155,7 @@ public class BTree implements TreeStructure {
         BTree result = null;
 
         BTree current = this;
-        // while (!current.everyChildIsALeaf()) {
+
         if (!current.everyChildIsALeaf()) {
             Integer[] separatorKeys = current.getSeparatorKeys();
             if (num < separatorKeys[0]) {
@@ -146,7 +166,28 @@ public class BTree implements TreeStructure {
                 current = current.binarySearch(num, separatorKeys);
             }
         }
-        // }
+
+        result = current;
+
+        return result;
+    }
+
+    private BTree getPageToRemove(Integer num) {
+        BTree result = null;
+
+        BTree current = this;
+
+        if (current.everyChildIsALeaf()) {
+            Integer[] separatorKeys = current.getSeparatorKeys();
+            if (num < separatorKeys[0]) {
+                current = current.pages.get(0);
+            } else if (current.pages.size() > 0 && num >= separatorKeys[separatorKeys.length - 1]) {
+                current = current.pages.get(current.pages.size() - 1);
+            } else {
+                current = current.binarySearch(num, separatorKeys);
+            }
+        }
+
         result = current;
 
         return result;
@@ -254,7 +295,56 @@ public class BTree implements TreeStructure {
 
     @Override
     public Boolean remove(Integer num) {
-        return false;
+        Boolean result = false;
+        BTree removalNode = this.findInsertionNode(num);
+        if (!removalNode.everyChildIsALeaf()) {
+            result = removalNode.remove(num);
+        } else {
+            BTree toRemove = removalNode.getPageToRemove(num);
+            result = removalNode.removePage(toRemove);
+        }
+        if (result) {
+
+            if (removalNode.getOccupancy() < removalNode.getThreshold()) {
+                // TODO: must merge
+                this.merge(removalNode);
+            }
+        }
+        return result;
+    }
+
+    private void merge(BTree bTree) {
+        int pageIndex = this.pages.indexOf(bTree);
+
+        boolean canMergeLeft;
+        boolean canMergeRight;
+
+        BTree leftNode = null;
+        BTree rightNode = null;
+        // look for room in left neighbor
+        int leftIndex = pageIndex - 1;
+        if (leftIndex >= 0 && leftIndex < this.pages.size() - 1) {
+            leftNode = this.pages.get(leftIndex);
+
+            while (bTree.pages.size() > 0 && leftNode.getOccupancy() < leftNode.getCapacity()) {
+                BTree removed = bTree.pages.remove(0);
+                leftNode.addPage(removed);
+            }
+        }
+        // look for room in right neighbor
+        int rightIndex = pageIndex + 1;
+        if (rightIndex > 0 && rightIndex < this.pages.size()) {
+            rightNode = this.pages.get(rightIndex);
+
+            while (bTree.pages.size() > 0 && rightNode.getOccupancy() < rightNode.getCapacity()) {
+                BTree removed = bTree.pages.remove(0);
+                rightNode.addPage(removed);
+            }
+        }
+
+        if (this.pages.get(pageIndex).isLeaf()) {
+            this.pages.remove(pageIndex);
+        }
     }
 
     @Override
