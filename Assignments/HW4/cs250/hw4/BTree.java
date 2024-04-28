@@ -1,7 +1,6 @@
 package cs250.hw4;
 
 import java.io.*;
-import java.text.BreakIterator;
 import java.util.*;
 
 public class BTree implements TreeStructure {
@@ -21,8 +20,6 @@ public class BTree implements TreeStructure {
         super();
         this.key = key;
         this.timestamp = System.nanoTime();
-        // this.pages = new ArrayList<>();
-        // this.pages.add(this);
     }
 
     private boolean isRoot() {
@@ -94,8 +91,6 @@ public class BTree implements TreeStructure {
         BTree newPage = new BTree(num);
         if (this.pages == null) {
             this.pages = new ArrayList<>();
-            // add the default node
-            // this.pages.add(new BTree(null));
         }
         this.pages.add(newPage);
         this.pages.sort(comparator);
@@ -104,8 +99,6 @@ public class BTree implements TreeStructure {
     private void addPage(BTree page) {
         if (this.pages == null) {
             this.pages = new ArrayList<>();
-            // add the default node
-            // this.pages.add(new BTree(this.key));
         }
         this.pages.add(page);
         this.pages.sort(comparator);
@@ -275,18 +268,12 @@ public class BTree implements TreeStructure {
             }
         }
 
-        // this.pages.sort(comparator);
-        // this.key = this.pages.get(0).key;
-
         if (this.getOccupancy() + 2 > this.getCapacity()) {
             // must insert as as internalNode
             BTree internalNode = new BTree(lowTree.key);
             internalNode.addPage(lowTree);
             internalNode.addPage(highTree);
 
-            // bTree.pages = new ArrayList<>();
-            // bTree.addPage(lowTree);
-            // bTree.addPage(highTree);
             this.addPage(internalNode);
         } else {
             // add the new pages to this tree.
