@@ -30,10 +30,6 @@ public class BTree implements TreeStructure {
         return (isRoot() && this.pages == null);
     }
 
-    private boolean isInnerNode() {
-        return (!isRoot() && this.pages != null);
-    }
-
     private boolean isLeaf() {
         return (this.pages == null);
     }
@@ -183,19 +179,6 @@ public class BTree implements TreeStructure {
 
         result = current;
 
-        return result;
-    }
-
-    private BTree findSeparator(int num) {
-        BTree result = null;
-        Integer[] separatorKeys = getSeparatorKeys();
-        if (num < separatorKeys[0]) {
-            result = this.pages.get(0);
-        } else if (this.pages.size() > 0 && num >= separatorKeys[separatorKeys.length - 1]) {
-            result = this.pages.get(this.pages.size() - 1);
-        } else {
-            result = binarySearch(num, separatorKeys);
-        }
         return result;
     }
 
